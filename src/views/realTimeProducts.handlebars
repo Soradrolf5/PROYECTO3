@@ -1,0 +1,24 @@
+{{> manageProduct }}
+
+<div>    
+    <h1>Lista de Productos</h1>
+    
+        {{#each productsList}}
+           <ul>
+<li><h2>{{this.title}}</h2></li>
+<li><p>{{this.description}}</p></li>
+<li><p>{{this.price}}</p></li>
+<li><p>{{this.thumbnail}}</p></li>
+<li><p>{{this.code}}</p></li>
+<li><p>{{this.stock}}</p></li>
+<li><p>{{this.id}}</p></li>
+</ul>
+        {{/each}}
+        <div id="productsList">
+
+        </div>
+        
+    </table>
+</div>
+
+<script src="/js/realTimeProducts.js"></script>
