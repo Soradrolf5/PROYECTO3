@@ -1,0 +1,33 @@
+<div>
+    <h1>Cart</h1>
+    <h1></h1>
+    <h2>Cart id: {{cartId}}</h2>
+    <h1></h1>
+    <h2>Products in cart</h2>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Price</th>
+            <th>Code</th>
+            <th>Stock</th>
+            <th>Description</th>
+            <th>Thumbnail</th>
+            <th>Quantity</th>
+        </tr>
+        {{#each cartProducts}}
+            <tr>
+                <td>{{this.product._id}}</td>
+                <td>{{this.product.title}}</td>
+                <td>{{this.product.price}}</td>
+                <td>{{this.product.code}}</td>
+                <td>{{this.product.stock}}</td>
+                <td>{{this.product.description}}</td>
+                <td><img src={{this.product.thumbnail}} alt={{this.product.thumbnail}}></td>
+                <td>{{this.quantity}}</td>
+                
+            </tr>
+        {{/each}}
+        
+    </table>
+</div>

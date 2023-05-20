@@ -1,5 +1,4 @@
 import mongoose from "mongoose"
-
 const cartCollection = 'carts'
 
 const cartSchema = new mongoose.Schema({
@@ -20,7 +19,8 @@ const cartSchema = new mongoose.Schema({
         ],
         default: []
     } 
-})
+}, {strictPopulate: false})
+
 
 const cartModel = mongoose.model(cartCollection, cartSchema)
 

@@ -6,7 +6,10 @@ const router = Router()
 let product = new Product()
 
 router.get('/', async (req,res) => {
-    res.send(await product.getProducts())
+
+    const urlProds = `http://localhost:8080/api/products`
+
+    res.send(await product.getProducts(req.query.limit, req.query.page, req.query.sort, req.query.query, urlProds))
 })
 
 router.get('/:pid', async (req,res) => {

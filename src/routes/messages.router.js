@@ -1,22 +1,19 @@
 import Router from 'express';
 import Message from '../dao/dbManagers/messages.dbclass.js';
 
-const router = new Router();
-const mm = new Message();
+const router = Router()
 
-router.get('/', (req, res) => { // Funciona
-    let result = mm.getAll();
-    res.send({status: 'Ok', payload: result});
+let message = new Message()
+
+router.get('/', async (req,res) => {
+    const getMessages = await message.getMessages()
+    res.send(getMessages)
 })
 
-router.post('/', async(req, res) => { // Funciona
-    let {user, message} = req.body;
-    let fullMessage = {
-        user,
-        message
-    }
-    let result = await mm.addMessage(fullMessage);
-    res.send({status: 'Ok', payload: result});
+router.post('/', async (req, res) => {
+    const newMessage = await message.addMessage(req.body) 
+    res.send(newMessage)
 })
 
-export default router;
+
+export default router

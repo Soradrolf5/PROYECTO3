@@ -1,57 +1,27 @@
-import {Router} from 'express'
-import Product from '../dao/dbManagers/products.dbclass.js';
+import { Router } from "express";
+import Product from "../dao/dbManagers/products.dbclass.js";
+import Cart from "../dao/dbManagers/carts.dbclass.js";
+import cartModel from "../dao/models/cart.model.js"
+import mongoose from 'mongoose';
+const pm = new Product();
+const cm = new Cart();
 
-let filePath = './files/products.json'
-const router =  Router()
-const pmanager = new Product(`${filePath}`)
+const router = Router();
+let product = new Product()
+let cart = new Cart()
+
 let productsList = []
 
-
-
-router.get("/", async (req,res) =>  {
-    let allProducts = await pmanager.getProducts()
-    res.render("index",   {
-        title:"Productos",
-        products: allProducts
-    })
+router.get('/products', async (req,res) => {
+    let productsData = (await product.getProducts(req.query.limit, req.query.page, req.query.sort, req.query.query)).payload
+    res.render('index', {layout: 'main', productsData})
 })
 
-router.get('/realtimeproducts', async (req,res) => {
-    productsList = await pmanager.getProducts()
-    res.render('realTimeProducts', {layout: 'main', productsList})
-
-    
+router.get('/carts/:cid', async (req,res) => {
+    let cartData = (await cart.getCartById(req.params.cid)).value
+    const cartId = cartData._id
+    const cartProducts = cartData.products
+    res.render('cart', {layout: 'main', cartId, cartData, cartProducts})
 })
 
-router.post('/realtimeproducts', async (req,res) => {
-    productsList = await pmanager.getProducts()
-    let errorDelete = false
-
-    if (req.query.method == 'DELETE') {
-        const prodToDelete = await pmanager.getProductById(Number(req.body.id))
-
-        if (prodToDelete.status == 'successful') {
-
-            const deleteProduct = await pmanager.deleteProduct(Number(req.body.id))
-            productsList = productsList.filter(item => item.id != Number(req.body.id))     
-            
-            res.render('realTimeProducts', {layout: 'main', productsList, errorDelete})
-        }
-        else {
-            errorDelete = true
-            const errorMessage = `Product with ID ${Number(req.body.id)} doesn't exist`
-            
-            res.render('realTimeProducts', {layout: 'main', productsList, errorDelete, errorMessage})
-        }
-
-        
-    }
-    else{
-
-        const productAdded = await pmanager.addProduct(req.body)
-        productsList.push(req.body)
-        res.render('realTimeProducts', {layout: 'main', productsList})
-    }
-})
-
-export default router
+export default router;

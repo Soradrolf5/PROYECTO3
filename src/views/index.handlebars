@@ -1,12 +1,43 @@
-<h1>Lista de Productos</h1>
-{{#each products}} 
-<ul>
-<li><h2>{{this.title}}</h2></li>
-<li><p>{{this.description}}</p></li>
-<li><p>{{this.price}}</p></li>
-<li><p>{{this.thumbnail}}</p></li>
-<li><p>{{this.code}}</p></li>
-<li><p>{{this.stock}}</p></li>
-<li><p>{{this.id}}</p></li>
-</ul>
-{{/each}} 
+<div>
+    <h1>List of products</h1>
+    <h1></h1>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Price</th>
+            <th>Code</th>
+            <th>Stock</th>
+            <th>Description</th>
+            <th>Thumbnail</th>
+        </tr>
+        {{#each productsData}}
+            <tr>
+                <td id="productId">{{this.id}}</td>
+                <td>{{this.title}}</td>
+                <td>{{this.price}}</td>
+                <td>{{this.code}}</td>
+                <td>{{this.stock}}</td>
+                <td>{{this.description}}</td>
+                <td><img src={{this.thumbnail}} alt={{this.thumbnail}}></td>
+                {{!-- <td><button type="button" onclick="showProduct()">Show product</button></td> --}}
+                <td><button type="button" onclick="addToCart()">Add to cart</button></td>
+                <td><label for="quantity">Quantity</label> <input type="number" id="quantity" name="quantity"></td>
+                
+            </tr>
+        {{/each}}
+        
+    </table>
+</div>
+
+<div>
+    <form>
+      {{!-- <button onclick="redirectToCart()" id="cartButton">Go to cart</button> --}}
+      CartId: <input type="text" name="cartId" id="cartId">
+      
+    </form>
+</div>
+
+<script src="/src/public/js/addToCart.js"></script>
+<script src="/src/public/js/goToCart.js"></script>
+<script src="/src/public/js/showProduct.js"></script>
