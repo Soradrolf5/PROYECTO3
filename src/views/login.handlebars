@@ -1,0 +1,27 @@
+{{#if isUserLogged}}
+    <div>
+        <h1>You are logged </h1>
+        <button type="button" onclick="logout()" id="logoutButton">Logout</button>
+    </div>
+
+{{else}}
+    <div>
+        <h1>Login</h1>
+        <form id="loginForm">
+            <label>Email</label>
+            <input name="emailLogin" id="emailLogin">
+            
+            <label>Password</label>
+            <input type="password" name="passwordLogin" id="passwordLogin">
+            
+            <button type="button" onclick="login()" id="loginButton">Login</button>
+            <br></br>
+            <button type="button" onclick="redirectRegister()" id="registerButton">Register</button>
+        </form>
+    </div>
+
+{{/if}}
+
+
+
+<script src="/src/public/js/login.js"></script>
