@@ -19,7 +19,7 @@ app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`)
 })
 
-mongoose.connect('mongodb+srv://Soradrolf5:Soradrolf5125@cluster0.somhlid.mongodb.net/')
+mongoose.connect('mongodb+srv://Soradrolf5:FlorenciaDaros5@cluster0.somhlid.mongodb.net/')
   .then(() => {
     console.log('Connected to database!');
   })
@@ -33,7 +33,7 @@ mongoose.connect('mongodb+srv://Soradrolf5:Soradrolf5125@cluster0.somhlid.mongod
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-      mongoUrl: 'mongodb+srv://Soradrolf5:Soradrolf5125@cluster0.somhlid.mongodb.net/test?retryWrites=true&w=majority',
+      mongoUrl: 'mongodb+srv://Soradrolf5:FlorenciaDaros5@cluster0.somhlid.mongodb.net/test?retryWrites=true&w=majority',
       mongoOptions: { useNewUrlParser: true, useUnifiedTopology: true },
       ttl: 20,
       autoRemove: 'interval',
