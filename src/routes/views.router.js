@@ -51,10 +51,9 @@ router.get("/logout", async (req, res) => {
 });
 
 router.get('/register', async (req,res) => {
-
-    res.render('register', {layout: 'main'})
+  const isUserLogged = false
+  res.render('register', {layout: 'main', isUserLogged})
 })
-
 
 
 export default router

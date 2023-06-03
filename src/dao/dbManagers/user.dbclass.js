@@ -1,4 +1,5 @@
 import userModel from "../models/user.model.js"
+import { isValidPassword } from '../../utils.js'
 
 export default class User {
     constructor() {
@@ -10,12 +11,9 @@ export default class User {
         try {
             const user = await userModel.findOne({ email: `${usr.email}`})
             
-            if (user == null) {
-                throw new Error (`User ${usr.email} not found`)
-            }
-            if (usr.password != user.password) {
-                throw new Error (`Incorrect password for user ${usr.email}`)
-            }
+            // if (user == null) {
+            //     throw new Error (`User ${usr.email} not found`)
+            // }
 
             return { status: 'successful', value: user }
         }
@@ -31,9 +29,9 @@ export default class User {
         try{
             let newUser = await userModel.findOne({ email: `${user.email}`})
 
-            if (newUser != null) {
-                throw new Error (`User ${user.email} already registered.`)
-            }
+            if (newUser !== null) {
+                throw new Error(`User ${user.email} already registered.`);
+              }
 
             newUser = await userModel.create(user)
 

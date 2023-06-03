@@ -10,6 +10,8 @@ import handlebars from 'express-handlebars'
 import __dirname from "./utils.js"
 import mongoose from 'mongoose';
 import MongoStore from 'connect-mongo';
+import passport from 'passport'
+import initializePassport from './config/passport.js'
 
 
 const app = express();
@@ -40,6 +42,12 @@ mongoose.connect('mongodb+srv://Soradrolf5:FlorenciaDaros5@cluster0.somhlid.mong
       autoRemoveInterval: 60 // Eliminar sesiones expiradas cada 1 minuto
     })
   }));
+  
+  initializePassport()
+app.use(passport.initialize())
+app.use(passport.session({
+    secret:"secretCoder"
+}))
 
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
