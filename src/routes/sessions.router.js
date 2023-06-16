@@ -1,12 +1,12 @@
 import express from 'express'
 import passport from "passport"
-
+import jwt from 'jsonwebtoken';
 const router = express.Router()
 
 router.get('/github', passport.authenticate('github', {scope: ['user:email']}), async (req, res) =>{})
 
 router.get('/githubcallback', passport.authenticate('github', { failureRedirect: '/login' }), async (req, res) => {
-    req.session.user = req.user; // Corrección aquí
+    req.session.user = req.user; 
     console.log(`User: ${req.session.user}`);
     res.redirect('/products');
   });
@@ -20,6 +20,8 @@ router.post('/login', passport.authenticate('login', { failureRedirect: '/api/se
     
     console.log(`User logged: ${req.user}`)
     res.send({status: "successful", message: `User ${req.user} logged`})
+    let token = jwt.sign({user}, 'coderSecret', {expiresIn: "24h"});
+    return res.cookie('coderCookieToken', token, {maxAge: 1000*60*24, httpOnly: true}).send({status: "Ok", message: "Logged in", payload: user});
 })
 
 router.post('/failedlogin', async (req, res) => {
@@ -37,5 +39,10 @@ router.post('/failedregister', async (req, res) => {
     console.log(req.message);
     res.send("Failed register");
 })
+
+
+router.get('/current', passport.authenticate('jwt', {session: false}), (req, res) => {
+    res.send(req.user);
+});
 
 export default router

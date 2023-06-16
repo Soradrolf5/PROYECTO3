@@ -2,10 +2,13 @@ import passport from 'passport'
 import local from 'passport-local'
 import User from '../dao/dbManagers/user.dbclass.js'
 import userModel from "../dao/models/user.model.js"
-import GitHubStrategy from 'passport-github2'
+import GitHubStrategy from 'passport-github';
 import { createHash, isValidPassword } from '../utils.js'
+import jwt from 'passport-jwt';
 
 let usr = new User()
+const jwtStrategy = jwt.Strategy;
+const extractJwt = jwt.ExtractJwt;
 
 const LocalStrategy = local.Strategy
 const initializePassport = () => {
@@ -42,8 +45,12 @@ const initializePassport = () => {
           let user = await userModel.findOne({ email });
           if (!user) {
             let newUser = {
-              password: "",
-              email
+              first_name,
+              last_name,
+              email,
+              age,
+              password: createHash(password),
+              cart
             };
             let result = await userModel.create(newUser);
             return done(null, result);
@@ -133,6 +140,26 @@ const initializePassport = () => {
 
         }
     ))
+passport.use('jwt', new jwtStrategy({
+  jwtFromRequest:extractJwt.fromExtractors([cookieExtractor]), // Recibe la cookie y extrae el token
+  secretOrKey: 'coderSecret' // Esta clave era, por error, distinta a la del jwt generator y eso hacía que me tire bad token signature
+}, async(jwt_payload, done) => {
+  try {
+      return done(null, jwt_payload);
+  } catch (error) {
+      return done(error);
+  }
+}
+));
+
+}
+
+export const cookieExtractor = req => {
+let token = null;
+if (req && req.cookies) {
+  token = req.cookies['coderCookieToken'];
+}
+return token
 }
 
 export default initializePassport

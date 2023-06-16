@@ -3,6 +3,8 @@ import Product from "../dao/dbManagers/products.dbclass.js";
 import Cart from "../dao/dbManagers/carts.dbclass.js";
 import cartModel from "../dao/models/cart.model.js"
 import { ObjectId } from 'mongoose';
+import { cookieExtractor } from '../config/passport.js'
+import passport from "passport";
 const pm = new Product();
 const cm = new Cart();
 const router = express.Router()

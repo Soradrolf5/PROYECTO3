@@ -12,7 +12,7 @@ import mongoose from 'mongoose';
 import MongoStore from 'connect-mongo';
 import passport from 'passport'
 import initializePassport from './config/passport.js'
-
+import cookieParser from 'cookie-parser'
 
 const app = express();
 const PORT = 3030;
@@ -43,6 +43,8 @@ mongoose.connect('mongodb+srv://Soradrolf5:FlorenciaDaros5@cluster0.somhlid.mong
     })
   }));
   
+  app.use(cookieParser());
+ 
   initializePassport()
 app.use(passport.initialize())
 app.use(passport.session({
