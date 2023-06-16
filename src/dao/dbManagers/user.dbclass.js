@@ -7,23 +7,25 @@ export default class User {
 
     //Get a user by email stored in user collection in database. 
     async getUserByEmail(usr) {
-
         try {
-            const user = await userModel.findOne({ email: `${usr.email}`})
-            
-            // if (user == null) {
-            //     throw new Error (`User ${usr.email} not found`)
-            // }
-
-            return { status: 'successful', value: user }
+          const user = await userModel.findOne({ email: usr.email });
+      
+          if (!user) {
+            throw new Error(`User ${usr.email} not found`);
+          }
+      
+          const isValid = isValidPassword(user, usr.password);
+      
+          if (!isValid) {
+            throw new Error(`Incorrect password for user ${usr.email}`);
+          }
+      
+          return { status: 'successful', value: user };
+        } catch (error) {
+          console.log(`ERROR getting user. Msg: ${error}`);
+          return { status: 'failed', error: `ERROR getting user. Msg: ${error}` };
         }
-        catch (error) {
-            console.log(`ERROR getting user. Msg: ${error}`)
-            return {status: 'failed', error: `ERROR getting user. Msg: ${error}` }
-
-        }
-    }
-
+      }
     //Add a new user to user collection
     async addNewUser(user) {
         try{

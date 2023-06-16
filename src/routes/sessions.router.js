@@ -11,23 +11,22 @@ router.get('/githubcallback', passport.authenticate('github', { failureRedirect:
     res.redirect('/products');
   });
 
-router.post('/login', passport.authenticate('login', { failureRedirect: '/api/session/failedlogin' }), async (req, res) => {
+  router.post('/login', passport.authenticate('login', { failureRedirect: '/api/session/failedlogin' }), async (req, res) => {
     if (!req.user) {
-        console.log(`Invalid credentials`)
-        return res.status(400).send({status: 'error', error: 'Invalid credentials'})
+      console.log(`Invalid credentials`);
+      return res.status(400).send({ status: 'error', error: 'Invalid credentials' });
     }
-    req.session.user = req.user
-    
-    console.log(`User logged: ${req.user}`)
-    res.send({status: "successful", message: `User ${req.user} logged`})
-    let token = jwt.sign({user}, 'coderSecret', {expiresIn: "24h"});
-    return res.cookie('coderCookieToken', token, {maxAge: 1000*60*24, httpOnly: true}).send({status: "Ok", message: "Logged in", payload: user});
-})
+  
+    console.log(`User logged: ${req.user}`);
+    let token = jwt.sign({ user: req.user }, 'coderSecret', { expiresIn: '24h' });
+    res.cookie('coderCookieToken', token, { maxAge: 1000 * 60 * 24, httpOnly: true });
+    res.send({ status: 'successful', message: `User ${req.user} logged`, token });
+  });
 
-router.post('/failedlogin', async (req, res) => {
-    console.log(req.message);
-    res.send("Failed login");
-})
+  router.post('/failedlogin', async (req, res) => {
+    console.log('Failed login');
+    res.send('Failed login');
+  });
 
 router.post('/register', passport.authenticate('register', { failureRedirect: '/api/session/failedregister' }), async (req, res) => {
     req.session.user = req.user

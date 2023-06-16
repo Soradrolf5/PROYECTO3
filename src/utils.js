@@ -2,7 +2,7 @@ import {fileURLToPath} from 'url'
 import { dirname } from 'path'
 import bcrypt from 'bcrypt'
 
-const PRIVATE_KEY = "CoderKeyMuySecret";
+export const PRIVATE_KEY = "coderSecret";
 
 export const createHash = password => bcrypt.hashSync(password, bcrypt.genSaltSync(10))
 
