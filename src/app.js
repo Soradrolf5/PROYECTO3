@@ -13,6 +13,8 @@ import MongoStore from 'connect-mongo';
 import passport from 'passport'
 import initializePassport from './config/passport.js'
 import cookieParser from 'cookie-parser'
+import dotenv from 'dotenv';
+dotenv.config();
 
 const app = express();
 const PORT = 3030;
@@ -31,11 +33,11 @@ mongoose.connect('mongodb+srv://Soradrolf5:FlorenciaDaros5@cluster0.somhlid.mong
   });
 
   app.use(session({
-    secret: "secretCoder",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-      mongoUrl: 'mongodb+srv://Soradrolf5:FlorenciaDaros5@cluster0.somhlid.mongodb.net/test?retryWrites=true&w=majority',
+      mongoUrl: process.env.MONGODB_URI,
       mongoOptions: { useNewUrlParser: true, useUnifiedTopology: true },
       ttl: 20,
       autoRemove: 'interval',
@@ -45,11 +47,12 @@ mongoose.connect('mongodb+srv://Soradrolf5:FlorenciaDaros5@cluster0.somhlid.mong
   
   app.use(cookieParser());
  
-  initializePassport()
-app.use(passport.initialize())
+  initializePassport();
+
+app.use(passport.initialize());
 app.use(passport.session({
-    secret:"secretCoder"
-}))
+  secret: process.env.SESSION_SECRET
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));

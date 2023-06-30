@@ -3,8 +3,11 @@ import local from 'passport-local';
 import User from '../dao/dbManagers/user.dbclass.js';
 import userModel from '../dao/models/user.model.js';
 import GitHubStrategy from 'passport-github';
-import { createHash, isValidPassword, PRIVATE_KEY } from '../utils.js';
+import { createHash, isValidPassword } from '../utils.js';
 import jwt from 'passport-jwt';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 let usr = new User();
 const jwtStrategy = jwt.Strategy;
@@ -34,8 +37,8 @@ const initializePassport = () => {
     'github',
     new GitHubStrategy(
       {
-        clientID: 'Iv1.7ea9b7d562885138',
-        clientSecret: '32a41c15d7414b25e0d4c6dfe36d1c1a7a107bca',
+        clientID: process.env.GITHUB_CLIENT_ID,
+        clientSecret: process.env.GITHUB_CLIENT_SECRET,
         callbackURL: 'http://localhost:3030/api/session/githubcallback',
       },
       async (accessToken, refreshToken, profile, done) => {
@@ -160,7 +163,7 @@ passport.use(
   new jwtStrategy(
     {
       jwtFromRequest: extractJwt.fromExtractors([cookieExtractor]),
-      secretOrKey: PRIVATE_KEY,
+      secretOrKey: process.env.PRIVATE_KEY,
     },
     async (jwt_payload, done) => {
       try {
