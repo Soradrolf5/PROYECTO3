@@ -1,5 +1,5 @@
 import userModel from "../models/user.model.js"
-import { isValidPassword } from '../../utils.js'
+import { isValidPassword, createHash } from '../../utils.js'
 
 export default class User {
     constructor() {
@@ -28,20 +28,20 @@ export default class User {
       }
     //Add a new user to user collection
     async addNewUser(user) {
-        try{
-            let newUser = await userModel.findOne({ email: `${user.email}`})
-
-            if (newUser !== null) {
-                throw new Error(`User ${user.email} already registered.`);
-              }
-
-            newUser = await userModel.create(user)
-
-            return { status: 'successful', value: newUser }
-            
-        }catch (error) {
-            console.log (`ERROR registering new user. Msg: ${error}`)
-            return {status: 'failed', error: `ERROR registering new user. Msg: ${error}`}
-        }        
+      try {
+        let newUser = await userModel.findOne({ email: `${user.email}` });
+    
+        if (newUser !== null) {
+          throw new Error(`User ${user.email} already registered.`);
+        }
+    
+        const hashedPassword = await createHash(user.password);
+        newUser = await userModel.create({ ...user, password: hashedPassword });
+    
+        return { status: 'successful', value: newUser };
+      } catch (error) {
+        console.log(`ERROR registering new user. Msg: ${error}`);
+        return { status: 'failed', error: `ERROR registering new user. Msg: ${error}` };
+      }
     }
 }

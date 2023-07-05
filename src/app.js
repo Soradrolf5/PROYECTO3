@@ -23,6 +23,9 @@ app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`)
 })
 
+app.use(express.json());
+app.use(express.urlencoded({extended:true}));
+
 mongoose.connect('mongodb+srv://Soradrolf5:FlorenciaDaros5@cluster0.somhlid.mongodb.net/')
   .then(() => {
     console.log('Connected to database!');
@@ -54,8 +57,7 @@ app.use(passport.session({
   secret: process.env.SESSION_SECRET
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({extended:true}));
+
 app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
 app.use('/', viewsRouter)

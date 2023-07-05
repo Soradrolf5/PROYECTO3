@@ -1,9 +1,12 @@
 import express from 'express';
 import passport from 'passport';
-import UserModel from '../dao/models/user.model.js';
-import { isValidPassword } from '../utils.js';
+import userModel from '../dao/models/user.model.js';
+import User from '../dao/dbManagers/user.dbclass.js';
+import { isValidPassword, createHash } from '../utils.js';
 
 const router = express.Router();
+
+const userInstance = new User(); // Crear una instancia de la clase User
 
 router.get('/github', passport.authenticate('github', { scope: ['user:email'] }), async (req, res) => {});
 
@@ -16,21 +19,20 @@ router.get('/githubcallback', passport.authenticate('github', { failureRedirect:
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
-  // Buscar usuario en la colección "users" utilizando el modelo
-  const user = await UserModel.findOne({ email });
+  const user = await userInstance.getUserByEmail({ email, password })
 
-  if (!user || !isValidPassword(user, password)) {
+  if (user.status === 'failed') {
     console.log(`Invalid credentials`);
     return res.status(400).send({ status: 'error', error: 'Invalid credentials' });
   }
 
-  console.log(`User logged: ${user}`);
+  console.log(`User logged: ${user.value}`);
   req.session.user = {
-    id: user._id,
-    email: user.email,
-    role: user.role,
+    id: user.value._id,
+    email: user.value.email,
+    role: user.value.role,
   };
-  res.send({ status: 'successful', message: `User ${user} logged` });
+  res.send({ status: 'successful', message: `User ${user.value.email} logged` });
 });
 
 router.post('/failedlogin', async (req, res) => {
@@ -42,7 +44,7 @@ router.post('/register', async (req, res) => {
   const { email, password } = req.body;
 
   // Verificar si el usuario ya está registrado
-  const existingUser = await UserModel.findOne({ email });
+  const existingUser = await userModel.findOne({ email });
 
   if (existingUser) {
     console.log(`User ${email} already registered.`);
@@ -50,11 +52,20 @@ router.post('/register', async (req, res) => {
   }
 
   // Crear un nuevo usuario
-  const newUser = new UserModel({ email, password });
+  const hashedPassword = await createHash(password);
+  const newUser = new userModel({ email, password: hashedPassword });
   await newUser.save();
 
-  console.log(`User registered: ${email}`);
-  res.send({ status: 'successful', message: `User ${email} registered` });
+  // Iniciar sesión del usuario manualmente
+  req.login(newUser, (err) => {
+    if (err) {
+      console.log('Error logging in the newly registered user:', err);
+      return res.status(500).send('Failed to log in');
+    }
+
+    console.log(`User registered: ${email}`);
+    res.send({ status: 'successful', message: `User ${email} registered` });
+  });
 });
 
 router.post('/failedregister', async (req, res) => {
