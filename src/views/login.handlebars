@@ -3,29 +3,25 @@
         <h1>You are logged </h1>
         <button type="button" onclick="logout()" id="logoutButton">Logout</button>
     </div>
-
 {{else}}
     <div>
         <h1>Login</h1>
         <form id="loginForm">
             <label>Email</label>
-            <input name="emailLogin" id="emailLogin">
+            <input name="email" id="email">
             
             <label>Password</label>
-            <input type="password" name="passwordLogin" id="passwordLogin">
+            <input type="password" name="password" id="password">
             
             <button type="button" onclick="login()" id="loginButton">Login</button>
             <br></br>
-            <a href="/api/session/github"><button type="button">Login with GitHub</button>
+            <a href="/api/session/github"><button type="button">Login with GitHub</button></a>
             <br></br>
             <br></br>
             <br></br>
             <a href="/register"><button type="button" id="registerButton">Register</button></a>
         </form>
     </div>
-
 {{/if}}
 
-
-
-<script src="/src/public/js/login.js"></script>
+<script src="/js/login.js"></script>

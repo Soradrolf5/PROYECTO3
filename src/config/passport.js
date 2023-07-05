@@ -81,75 +81,79 @@ const initializePassport = () => {
 
   passport.use(
     'login',
-    new LocalStrategy({ passReqToCallback: true, usernameField: 'email' }, async (req, username, password, done) => {
-      try {
-        let adminUser = { email: 'adminCoder@coder.com', password: 'adminCod3r123', role: 'admin', _id: 'admin' };
-        let userLogged = adminUser;
-
-        if (!req.body.email) {
-          console.log('Email not sent');
-          return done(null, false, { message: 'Email not sent' });
-        } else if (!req.body.password) {
-          console.log('Password not sent');
-          return done(null, false, { message: 'Password not sent' });
-        }
-
-        if (req.body.email != adminUser.email) {
-          const userDB = (await usr.getUserByEmail(req.body)).value;
-          if (!userDB) {
-            console.log('User not found');
-            return done(null, false, { message: 'User not found' });
+    new LocalStrategy(
+      { passReqToCallback: true, usernameField: 'email' },
+      async (req, email, password, done) => {
+        try {
+          let adminUser = { email: 'adminCoder@coder.com', password: 'adminCod3r123', role: 'admin', _id: 'admin' };
+          let userLogged = adminUser;
+  
+          if (!email) {
+            console.log('Email not sent');
+            return done(null, false, { message: 'Email not sent' });
+          } else if (!password) {
+            console.log('Password not sent');
+            return done(null, false, { message: 'Password not sent' });
           }
-
-          const isValid = isValidPassword(userDB, req.body.password);
-
-          if (!isValid) {
-            console.log(`ERROR: Incorrect password for user ${userDB.email}`);
-            return done(null, false, { message: `Incorrect password for user ${userDB.email}` });
+  
+          if (email != adminUser.email) {
+            const userDB = (await usr.getUserByEmail({ email })).value;
+            if (!userDB) {
+              console.log('User not found');
+              return done(null, false, { message: 'User not found' });
+            }
+  
+            const isValid = isValidPassword(userDB, password);
+  
+            if (!isValid) {
+              console.log(`ERROR: Incorrect password for user ${userDB.email}`);
+              return done(null, false, { message: `Incorrect password for user ${userDB.email}` });
+            }
+  
+            userLogged = userDB;
+  
+            delete userDB.password;
+            return done(null, userDB);
           }
-
-          userLogged = userDB;
-
-          delete userDB.password;
-          return done(null, userDB);
+  
+          req.session.user = {
+            id: userLogged._id,
+            email: userLogged.email,
+            role: userLogged.role,
+          };
+  
+          req.session.admin = userLogged.role == 'admin' ? true : false;
+          console.log(`User ${JSON.stringify(req.session.user)} logged`);
+        } catch (error) {
+          return done('Error logging user: ' + error);
         }
-
-        req.session.user = {
-          id: userLogged._id,
-          email: userLogged.email,
-          role: userLogged.role,
-        };
-
-        req.session.admin = userLogged.role == 'admin' ? true : false;
-        console.log(`User ${JSON.stringify(req.session.user)} logged`);
-      } catch (error) {
-        return done('Error logging user: ' + error);
       }
-    })
+    )
   );
 
   passport.use(
     'register',
     new LocalStrategy({ passReqToCallback: true, usernameField: 'email' }, async (req, username, password, done) => {
       const newUser = req.body;
-
+  
       try {
-        const checkUser = (await usr.getUserByEmail(newUser)).value;
-
+        const checkUser = await User.findOne({ email: newUser.email });
+  
         if (checkUser != null) {
           return done(null, false, { message: 'User already exists' });
         }
-
+  
         newUser.password = createHash(newUser.password);
-
-        const addUser = (await usr.addNewUser(newUser)).value;
+  
+        const addUser = await User.create(newUser);
         console.log(`User ADDED: ${JSON.stringify(addUser)}`);
+  
         req.session.user = {
           id: addUser._id,
           email: addUser.email,
           role: addUser.role,
         };
-
+  
         return done(null, addUser);
       } catch (error) {
         return done('Error registering user: ' + error);
