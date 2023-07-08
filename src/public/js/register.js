@@ -1,20 +1,39 @@
-async function register() {
+const form = document.getElementById("registerForm");
 
-    const registerForm = document.getElementById('registerForm')
-    const data = new FormData(registerForm)
-    const formInputs={}
+form.addEventListener('submit', event => {
 
-    data.forEach((value, key) => formInputs[key] = value)
+    event.preventDefault();
 
-    await fetch(`/api/session/register`, {
+    const data = new FormData(form);
+    const object = {};
+
+    data.forEach((value, key) => {
+        object[key] = value;
+    })
+    
+    fetch('/api/session/register', {
         method: 'POST',
-        body: JSON.stringify(formInputs),
+        body: JSON.stringify(object),
         headers: {
             'Content-type': 'application/json'
         }
-    }).then(result => result.json())
-    .then(json => {
-        console.log(json);
-        location.assign('/products')
     })
-}
+    // .then(result => result.json()).then(json => console.log(json))
+    .then(
+        result => result.json()).then(json => {
+            if (json.status == 'Ok') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Account created succesfully'
+                })
+                setTimeout(function() {location.replace('/login');}, 900);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops, the account wasnt created',
+                    text: json.error || "The email is already used"
+                })
+            }
+        }
+    )
+})

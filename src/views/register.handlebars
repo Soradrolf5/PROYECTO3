@@ -1,24 +1,23 @@
-<div>
-    <h1>Register</h1>
-    <form id="registerForm">
-        <label>Name</label>
-        <input name="name" id="nameRegister">
-        <br>
-
-        <label>Last Name</label>
-        <input name="lastName" id="lastNameRegister">
-        <br>
-
-        <label>Email</label>
-        <input name="email" id="emailRegister">
-        <br>
-
-        <label>Password</label>
-        <input type="password" name="password" id="passwordRegister">
-        <br>
-
-        <button type="button" onclick="register()" id="buttonRegister">Register</button>
+<link rel="stylesheet" href="/css/styles.css">
+<header>
+    <div></div>
+    <h1>Crea tu cuenta</h1>
+    <div></div>
+</header>
+<main>
+    <form action="" method="post" id="registerForm" class="form">
+        <div class="formOrder">
+            <p class="formText">Nombre</p> <input type="text" name="first_name">
+            <p class="formText">Apellido</p> <input type="text" name="last_name">
+            <p class="formText">Edad</p> <input type="number" name="age">
+            <p class="formText">Correo electrónico</p> <input type="text" name="email">
+            <p class="formText">Contraseña</p> <input type="password" name="password">
+        </div>
+        <button type="submit" class="submit">Crear cuenta</button>
     </form>
-</div>
-
+    <div class="switch">
+        <p>Inicia sesión <a href="http://localhost:3000/login">aqui</a></p>
+    </div>
+</main>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="/js/register.js"></script>

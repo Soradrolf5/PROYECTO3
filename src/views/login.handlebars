@@ -1,27 +1,20 @@
-{{#if isUserLogged}}
-    <div>
-        <h1>You are logged </h1>
-        <button type="button" onclick="logout()" id="logoutButton">Logout</button>
+<link rel="stylesheet" href="/css/styles.css">
+<header>
+    <div></div>
+    <h1>Inicia sesion</h1>
+    <div></div>
+</header>
+<main>
+    <form action="" method="post" id="loginForm" class="form">
+        <div class="formOrder">
+            <p class="formText">Correo electrónico</p> <input type="text" name="email">
+            <p class="formText">Contraseña</p> <input type="password" name="password">
+        </div>
+        <button type="submit" class="submit">Iniciar sesión</button>
+    </form>
+    <div class="switch">
+        <p>Crea tu cuenta <a href="http://localhost:3000/register">aqui</a></p>
     </div>
-{{else}}
-    <div>
-        <h1>Login</h1>
-        <form id="loginForm">
-            <label>Email</label>
-            <input name="email" id="email">
-            
-            <label>Password</label>
-            <input type="password" name="password" id="password">
-            
-            <button type="button" onclick="login()" id="loginButton">Login</button>
-            <br></br>
-            <a href="/api/session/github"><button type="button">Login with GitHub</button></a>
-            <br></br>
-            <br></br>
-            <br></br>
-            <a href="/register"><button type="button" id="registerButton">Register</button></a>
-        </form>
-    </div>
-{{/if}}
-
+</main>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="/js/login.js"></script>

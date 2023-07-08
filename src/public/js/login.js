@@ -1,26 +1,46 @@
-document.getElementById("loginButton").addEventListener("click", function() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-  
-    fetch("/api/session/login", {
-      method: "POST",
-      body: JSON.stringify({ email: email, password: password }),
-      headers: {
-        "Content-type": "application/json"
-      }
+const form = document.getElementById("loginForm");
+
+form.addEventListener('submit', event => {
+
+    event.preventDefault();
+
+    const data = new FormData(form);
+    const object = {};
+
+    data.forEach((value, key) => {
+        object[key] = value;
     })
-      .then(result => result.json())
-      .then(json => {
-        console.log(json);
-        location.assign("/products");
-      });
-  });
-  
-  function logout() {
-    fetch("/logout", {
-      method: "GET"
-    })
-      .then(() => {
-        location.assign("/login");
-      });
-  }
+
+    if (object.email == "" || object.password == "") {
+        Swal.fire({
+            icon: 'error',
+            title: 'Fill all inputs'
+        })
+    } else {
+        fetch('/api/session/login', {
+            method: 'POST',
+            body: JSON.stringify(object),
+            headers: {
+                'Content-type': 'application/json'
+            }
+        })
+        .then(res => res.json()).then(json => {
+            console.log(json)
+            console.log(json.body)
+            if (json.status == 'Ok') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Logged in'
+                })
+                setTimeout(function() {location.replace('/');}, 900);
+
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops, the credentials arent valid',
+                    text: json.error || "Verify your mail and password"
+                })
+            }
+        })
+    }
+})
