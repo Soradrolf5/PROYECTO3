@@ -6,12 +6,14 @@ const pc = new ProductController();
 
 const router = Router();
 
-router.get('/', pc.get)
+router.get('/', pc.get);
 
-router.post('/', isAdmin, pc.post)
+router.get('/mockProducts', pc.getMockProducts);
 
-router.put('/:pid', isAdmin, pc.put)
+router.post('/', isAdmin, pc.post);
 
-router.delete('/:pid', isAdmin, pc.delete)
+router.put('/:pid', isAdmin, pc.put);
+
+router.delete('/:pid', isAdmin, pc.delete);
 
 export default router;

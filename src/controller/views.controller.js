@@ -1,19 +1,20 @@
 import { CartsService as cm, ProductsService as pm } from '../dao/repository/index.js';
+import { CustomError, generateErrorInfo } from '../errors.js';
 
 export default class ViewController {
-    get = async(req, res) => {
-        let isLogin;
-        let user;
-        
-        if (!req.user) {
-            isLogin = false;
-            user = {};
-        } else {
-            isLogin = true
-            user = req.user;
-        }
-    
+    get = async(req, res, next) => {
         try {
+            let isLogin;
+            let user;
+            
+            if (!req.user) {
+                isLogin = false;
+                user = {};
+            } else {
+                isLogin = true
+                user = req.user;
+            }
+
             let {limit = 10, page = 1, query = 'none', sort} = req.query;
             let products;
         
@@ -34,51 +35,49 @@ export default class ViewController {
         
             res.render('home', {products, hasNextPage, hasPrevPage, nextLink, prevLink, page, isLogin, user});
         } catch(error) {
-            console.log(error)
-            res.render('error');
+            next(error);
         }
     }
 
-    getCart = async(req, res) => {
-        let isLogin;
-        let user;
-        
-        if (!req.user) {
-            isLogin = false;
-            user = {};
-        } else {
-            isLogin = true
-            user = req.user;
-        }
-
-        let cid = req.params.cid;
+    getCart = async(req, res, next) => {
         try {
+            let isLogin;
+            let user;
+            
+            if (!req.user) {
+                isLogin = false;
+                user = {};
+            } else {
+                isLogin = true
+                user = req.user;
+            }
+
+            let cid = req.params.cid;
             let cart = await cm.getOne(cid);
             res.render('carts', {cart, isLogin, user}); // Hacer que renderice los productos y tengas el carts/purchase
-        } catch {
-            res.render('error');
+        } catch(error) {
+            next(error)
         }
     }
 
-    getProduct = async(req, res) => {
-        let isLogin;
-        let user;
-        
-        if (!req.user) {
-            isLogin = false;
-            user = {};
-        } else {
-            isLogin = true
-            user = req.user;
-        }
-
+    getProduct = async(req, res, next) => {
         try {
+            let isLogin;
+            let user;
+            
+            if (!req.user) {
+                isLogin = false;
+                user = {};
+            } else {
+                isLogin = true
+                user = req.user;
+            }
             let pid = req.params.pid;
             let product = await pm.getOne(pid);
             let cartId = user.cart[0];
             res.render('product', {product, isLogin, user, cartId});
-        } catch {
-            res.render('error');
+        } catch(error) {
+            next(error)
         }
     }
 
@@ -114,20 +113,28 @@ export default class ViewController {
         res.render('user', {user, isAdmin})
     }
 
-    getChat = (req, res) => {
-        let user;
-        
-        if (!req.user) {
-            user = {};
-        } else {
+    getChat = (req, res, next) => {
+        try {
+            let user;
+            
+            if (!req.user) {
+                user = {};
+                CustomError.createError({ statusCode: 401, name: "You need to be logged in", cause: generateErrorInfo.unauthorized(), code: 6});
+            }
+            
             user = req.user;
-        }
 
-        res.render('chat', {user});
+            res.render('chat', {user});
+        } catch(error) {
+           next() 
+        }
     }
 
     getAll = (req, res) => {
         res.render('NotFound');
+    }
 
+    getUnauthorized = (req, res) => {
+        res.render('unauthorized');
     }
 }

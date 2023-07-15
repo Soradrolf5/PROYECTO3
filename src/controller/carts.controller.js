@@ -2,19 +2,31 @@ import {faker} from '@faker-js/faker';
 import { tickets as Ticket } from '../dao/factory.js';
 import { CartsService as cm, ProductsService as pm } from '../dao/repository/index.js';
 
-const tm = new Ticket();
+import { CustomError, errorCodes, generateErrorInfo } from '../errors.js';
 
 export default class CartController {
     get = async(req, res) => {
-        let carts = await cm.get();
-
-        (!carts)?res.send({status: 404, error: "No info avaliable"}):res.send({status: "Ok", payload: carts});
+        try {
+            let carts = await cm.get();
+            if (!carts) CustomError.createError({cause: generateErrorInfo.getEmptyDatabase(), message: "No info avaliable", code: 3});
+            res.send({status: "Ok", payload: carts});
+        } catch (error) {
+            next(error);
+        }
     }
 
-    getOne = async(req, res) => {
-        let cid = req.params.cid;
-        let carts = await cm.getOne(cid);
-        (!carts)?res.send({status: 404, error: "No info avaliable"}):res.send({status: "Ok", payload: carts});
+    getOne = async(req, res, next) => {
+        try {
+            let cid = req.params.cid;
+            if (cid.length != 24) CustomError.createError({statusCode: 400, name: "Error leyendo la base de datos", cause: generateErrorInfo.getId(cid), message: "Cart ID not valid", code: 2});
+            let carts = await cm.getOne(cid);
+            console.log(carts)
+            if (!carts) CustomError.createError({name: "Error leyendo la base de datos", cause: generateErrorInfo.getEmptyDatabase(), message: "No info avaliable", code: 3})
+                // res.send({status: 404, error: "No info avaliable"})
+            res.send({status: "Ok", payload: carts});
+        } catch (error) {
+            next(error);
+        }
     }
 
     post = async(req, res) => {
@@ -23,9 +35,9 @@ export default class CartController {
     }
 
     postPurchase = async(req, res) => {
-        let cid = req.params.cid;
-        console.log(req.user.user)
         try {
+            let cid = req.params.cid;
+            
             let cart = await cm.getOne(cid);
             let cartProducts = cart.products;
             let ticketTotal = 0;
@@ -42,7 +54,7 @@ export default class CartController {
                 }
             });
 
-            if (!valid) return res.send({status: 400, message: "You need to have products you can buy"});
+            if (!valid) CustomError.createError({statusCode: 400, name: "No products added", cause: generateErrorInfo.getEmptyDatabase(), message: "There was no product that could be purchased", code: 4}) //return res.send({status: 400, message: "You need to have products you can buy"});
 
             cart.products = cartProducts;
             cm.put(cart._id, cart);
@@ -54,9 +66,8 @@ export default class CartController {
             tm.post({code, purchaser: user, purchase_datetime: date, amount: ticketTotal});
 
             res.send({status: "Ok", payload: {code, purchaser: user, purchase_datetime: date, amount: ticketTotal}});
-        } catch(e) {
-            console.log(e);
-            res.send({status: 500, message: "Something went wrong"});
+        } catch (error) {
+            next(error);
         }
     }
 
@@ -90,8 +101,8 @@ export default class CartController {
             cart.products = cartProducts;
             let result = await cm.put(cid, cart);
             res.send(result);
-        } catch {
-            res.send({status: 404, message: "The cart ID doesnt exist or you are not sending an array"});
+        } catch (error) {
+            next(error);
         }
     }
 
@@ -102,6 +113,7 @@ export default class CartController {
             let {quantity} = req.body;
             
             let cart = await cm.getOne(cid);
+            if (!cart) CustomError.createError({statusCode: 404, name: "Cart doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
             let exist = false;
             cart.products.forEach(product => {
                 if (product._id == pid) {
@@ -111,26 +123,28 @@ export default class CartController {
             })
             if (exist === true) {
                 let result = await cm.put(cid, cart);
-                res.send({status: "Ok", payload: result});
-            } else {
-                res.send({status: 404, message: "Product doesnt exist in cart"});
+                return res.send({status: "Ok", payload: result});
             }
-        } catch {
-            res.send({status: 404, message: "The product or cart doesnt exist"});
+            CustomError.createError({statusCode: 404, name: "Product doesnt exist in cart", cause: generateErrorInfo.idNotFound(), code: 2})
+        } catch (error) {
+            next(error);
         }
     }
 
     delete = async(req, res) => {
         try {
             const id = req.params.cid;
+            let cart = await cm.getOne(cid);
+            if (!cart) CustomError.createError({statusCode: 404, name: "Cart doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
             let result = await cm.deleteCart(id);
             res.send({status: "Ok", payload: result});
-        } catch {
-            res.send({status: 404, message: "The cart doesnt exist"});
+        } catch (error) {
+            next(error);
         }
     }
 
     deleteProduct = async(req, res) => {
+        asdf
         try {
             const id = req.params.cid;
             let productId = req.params.pid;
@@ -138,17 +152,17 @@ export default class CartController {
             let productExist = await pm.getOne(productId);
             
             if (!productExist) {
-                res.send({status: 404, payload: "Product doesnt exist"});
+                CustomError.createError({statusCode: 404, name: "Product doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
             } else {
                 let cart = await cm.getOne(id);
         
                 if (!cart) {
-                    res.send({status: 404, payload: "Cart doesnt exist"});
+                    CustomError.createError({statusCode: 404, name: "Cart doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
                 } else {
                     let productsInCart = cart.products;
                     let idToSearch = (element) => element.id === productId;
                     if (idToSearch == -1) {
-                        res.send({status: 404, payload: "El producto no existe dentro del carrito"});
+                        CustomError.createError({statusCode: 404, name: "Product doesnt exist in cart", cause: generateErrorInfo.idNotFound(), code: 2})
                     } else {
                         let position = productsInCart.findIndex(idToSearch);
                         productsInCart.splice(position, 1);
@@ -157,9 +171,8 @@ export default class CartController {
                     }
                 }
             }
-        } catch {
-            res.send({status: 404, message: "The product or cart doesnt exist"});
-    
+        } catch (error) {
+            next(error);
         }
     }
 }

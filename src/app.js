@@ -16,7 +16,7 @@ import messageRouter from './routes/messages.routes.js'
 
 import config from './config/config.js';
 import { connection } from './dao/factory.js';
-
+import errorHandler from './middlewares/errors/index.js';
 import { messages as Message } from './dao/factory.js';
 
 const mm = new Message();
@@ -44,6 +44,8 @@ app.use('/api/session', sessionRouter);
 app.use('/api/tickets', ticketRouter);
 app.use('/api/chat', messageRouter);
 app.use('/', viewsRouter);
+
+app.use(errorHandler)
 
 const httpServer = app.listen(port, () => console.log(`Server listening on port ${port}`));
 
