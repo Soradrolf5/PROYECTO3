@@ -1,9 +1,11 @@
 import { ProductsService as pm } from '../dao/repository/index.js';
 import { faker } from '@faker-js/faker';
-import { CustomError, generateErrorInfo } from '../errors.js';
+import { CustomError, generateErrorInfo } from '../utils/errors.js';
 
 export default class ProductController {
     get = async(req, res, next) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             let {limit = 10, page = 1, query = 'none', sort} = req.query;
             let products;
@@ -41,6 +43,8 @@ export default class ProductController {
             
             if (!products) {
                 CustomError.createError({statusCode: 500, name: "No info avaliable", cause: generateErrorInfo.getEmptyDatabase(), code: 3});
+                req.logger.warning('La base de datos de products está vacía');
+
             }
             res.send({status: "Ok", payload: products.docs, totalPages: products.totalPages, prevPage: products.prevPage, nextPage: products.nextPage, page: products.page, hasPrevPage: products.hasPrevPage, hasNextPage: products.hasNextPage, nextLink: nextLink, prevLink: prevLink});
         } catch(error) {
@@ -49,6 +53,8 @@ export default class ProductController {
     }
 
     getMockProducts = async(req, res) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         let docs = [];
         for (var i = 0; i < 100; i++) {
             docs.push({
@@ -65,6 +71,8 @@ export default class ProductController {
     }
 
     post = async(req, res, next) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             const {title, description, code, price, stock, thumbnails} = req.body;
             let newProduct = {
@@ -78,7 +86,9 @@ export default class ProductController {
         
             if (!title || !description || !code || !price || !stock) {
                 CustomError.createError({statusCode: 404, name: "Some data is missing", cause: generateErrorInfo.getEmptyDatabase(), code: 4});
+                req.logger.error(`Hay datos faltantes en ${req.url}`);
             }
+
             const result = await pm.saveProduct(newProduct);
             res.send({status: "Ok", payload: result});
         } catch(error) {
@@ -87,6 +97,8 @@ export default class ProductController {
     }
 
     put = async(req, res, next) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             const id = req.params.pid;
     
@@ -101,7 +113,10 @@ export default class ProductController {
             }
             
             let exists = pm.getOne(id);
-            if (!exists) CustomError.createError({statusCode: 400, name: "Product doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
+            if (!exists) {
+                CustomError.createError({statusCode: 400, name: "Product doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
+                req.logger.error(`El product ID no es válido: ${id} en ${req.url}`);
+            }
 
             let result = await pm.put(id, newProduct);
             res.send({status: "Ok", payload: result});
@@ -111,11 +126,16 @@ export default class ProductController {
     }
 
     delete = async(req, res, next) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             const id = req.params.pid;
     
             let exists = pm.getOne(id);
-            if (!exists) CustomError.createError({statusCode: 400, name: "Product doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
+            if (!exists) {
+                CustomError.createError({statusCode: 400, name: "Product doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
+                req.logger.error(`El product ID no existe: ${id} en ${req.url}`);
+            }
 
             let result = await pm.delete(id);
             res.send({status: "Ok", payload: result});

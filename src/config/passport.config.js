@@ -4,7 +4,8 @@ import userManager from "../dao/dbManagers/users.js";
 import CartManager from '../dao/dbManagers/carts.js';
 import config from "./config.js";
 
-import {createHash, isValidPassword} from "../utils.js";
+import {createHash, isValidPassword} from "../utils/utils.js";
+import { logger } from '../utils/logger.js';
 
 import jwt from 'passport-jwt';
 
@@ -15,8 +16,6 @@ const jwtStrategy = jwt.Strategy;
 const extractJwt = jwt.ExtractJwt;
 
 const localStrategy = local.Strategy;
-
-console.log(config);
 
 const initPassport = () => {
 
@@ -31,11 +30,12 @@ const initPassport = () => {
 
     passport.use('register', new localStrategy( // This works
         {passReqToCallback: true, usernameField: 'email'}, async(req, something, username, done) => {
-            const {first_name, last_name, age, email, password, role} = req.body;
+            const {first_name, last_name, age, email, password} = req.body;
             try {
                 let user = await um.getOne({email: email});
+                req.logger.debug(user);
                 if (user != null) {
-                    console.log("El usuario ya existe");
+                    req.logger.debug("El usuario ya existe");
                     return done(null, false, {status: "Error", message: "El usuario ya existe"});
                 }
 
@@ -49,8 +49,7 @@ const initPassport = () => {
                     email,
                     age,
                     password: createHash(password),
-                    cart,
-                    role: role || 'user'
+                    cart
                 }
 
                 let newUser = await um.post(result);
@@ -62,13 +61,13 @@ const initPassport = () => {
         }
     ))
 
-    passport.use('login', new localStrategy( 
+    passport.use('login', new localStrategy( // No redirige si está mal
         {passReqToCallback: true, usernameField: 'email'}, async(req, something, abc, done) => {
             const {email, password} = req.body;
             try {
                 const user = await um.getOne({email});
                 if (!user) {
-                    console.log("El usuario no existe");
+                    logger.info("El usuario no existe");
                     return done(null, false, {status: "Error", message: "El usuario no existe"});
                 }
 
@@ -93,7 +92,6 @@ const initPassport = () => {
     }, async(jwt_payload, done) => {
         try {
             if (!jwt_payload) {
-                console.log("Empty")
                 return done();
             } else {
                 return done(null, jwt_payload);

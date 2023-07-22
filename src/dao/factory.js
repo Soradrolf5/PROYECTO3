@@ -1,11 +1,13 @@
 import config from "../config/config.js";
 import mongoose from 'mongoose';
+import { logger } from "../utils/logger.js";
 
 export let users, carts, products, tickets, messages, connection;
 
 switch (config.persistence) {
     case "MONGO":
         connection = mongoose.connect(config.connection);
+        logger.info("Connected to MongoDB");
         const {default: usersMongo} = await import('./dbManagers/users.js');
         const {default: cartsMongo} = await import('./dbManagers/carts.js');
         const {default: productsMongo} = await import('./dbManagers/products.js');

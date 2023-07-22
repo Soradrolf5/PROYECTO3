@@ -5,18 +5,19 @@ const mm = new MessageManager();
 
 export default class Messages {
     get = async(req, res) => {
-        let user = req.user.user;
-        console.log(user);
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         let result = mm.getAll();
         res.send({status: 'Ok', payload: result});
     }
 
     post = async(req, res) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         let user = req.user.user;
         let {message} = req.body;
         message = JSON.parse(`${message}`);
         message = `${message}`;
-        console.log(message);
         
         let fullMessage = {
             user: user.email,

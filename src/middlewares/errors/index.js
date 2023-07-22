@@ -1,6 +1,7 @@
-import { errorCodes } from "../../errors.js";
+import { errorCodes } from "../../utils/errors.js";
+
 export default (error, req, res, next) => {
-    console.log(error.cause);
+    req.logger.debug(error.cause);
     switch (error.code){
         case errorCodes.INVALID_TYPES_ERROR:
             res.status(error.statusCode).send({status: "error", error: error.name, details: error.message});
@@ -18,6 +19,7 @@ export default (error, req, res, next) => {
             res.render('unauthorized');
             break;
         default:
+            req.logger.fatal(error);
             res.status(500).send({status: "error", error: "Error desconocido"});
     }
 }

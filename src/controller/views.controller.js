@@ -1,8 +1,10 @@
 import { CartsService as cm, ProductsService as pm } from '../dao/repository/index.js';
-import { CustomError, generateErrorInfo } from '../errors.js';
+import { CustomError, generateErrorInfo } from '../utils/errors.js';
 
 export default class ViewController {
     get = async(req, res, next) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             let isLogin;
             let user;
@@ -27,19 +29,22 @@ export default class ViewController {
         
             page = parseInt(page);
             let nextLink, prevLink;
-            (products.hasNextPage == true ) ? nextLink = `http://localhost:8080/?limit=${limit}&page=${page+1}&query=${query}` : nextLink = null;
-            (products.hasPrevPage == true ) ? prevLink = `http://localhost:8080/?limit=${limit}&page=${page-1}&query=${query}` : prevLink = null;
+            (products.hasNextPage == true ) ? nextLink = `http://localhost:3000/?limit=${limit}&page=${page+1}&query=${query}` : nextLink = null;
+            (products.hasPrevPage == true ) ? prevLink = `http://localhost:3000/?limit=${limit}&page=${page-1}&query=${query}` : prevLink = null;
         
             let hasNextPage = products.hasNextPage, hasPrevPage = products.hasPrevPage;
             products = products.docs;
         
             res.render('home', {products, hasNextPage, hasPrevPage, nextLink, prevLink, page, isLogin, user});
         } catch(error) {
+            req.logger.debug(error);
             next(error);
         }
     }
 
     getCart = async(req, res, next) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             let isLogin;
             let user;
@@ -61,6 +66,8 @@ export default class ViewController {
     }
 
     getProduct = async(req, res, next) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             let isLogin;
             let user;
@@ -82,14 +89,20 @@ export default class ViewController {
     }
 
     getLogin = (req, res) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         res.render('login');
     }
 
     getRegister = (req, res) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         res.render('register');
     }
 
     getUser = async(req, res) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         let isLogin;
         let user;
         
@@ -114,12 +127,15 @@ export default class ViewController {
     }
 
     getChat = (req, res, next) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             let user;
             
             if (!req.user) {
                 user = {};
                 CustomError.createError({ statusCode: 401, name: "You need to be logged in", cause: generateErrorInfo.unauthorized(), code: 6});
+                req.logger.error(`Se ha intentado entrar sin iniciar sesión a ${req.url}`);
             }
             
             user = req.user;
@@ -131,10 +147,14 @@ export default class ViewController {
     }
 
     getAll = (req, res) => {
-        res.render('NotFound');
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
+        res.render('notFound');
     }
 
     getUnauthorized = (req, res) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         res.render('unauthorized');
     }
 }

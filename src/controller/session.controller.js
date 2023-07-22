@@ -2,18 +2,21 @@ import jwt from 'jsonwebtoken';
 import Dto from '../dao/dto/dto.js';
 
 import config from '../config/config.js';
-import { transport } from '../utils.js';
-
-import { CustomError, errorCodes, generateErrorInfo } from '../errors.js';
+import { transport } from '../utils/utils.js';
+import { CustomError, errorCodes, generateErrorInfo } from '../utils/errors.js';
 
 const dto = new Dto;
 
 export default class SessionController {
     getCurrent = async(req, res) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         res.send(dto.getCurrent(req.user.user));
     }
 
     postRegister = async(req, res, next) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             try {
             await transport.sendMail({
@@ -35,6 +38,8 @@ export default class SessionController {
     }
 
     postLogin = async(req, res, next) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             const user = {
                 first_name: req.user.first_name,
@@ -52,6 +57,8 @@ export default class SessionController {
     }
 
     postLogout = async(req, res, next) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             res.clearCookie("coderCookieToken")
             return res.send({status: "Ok", message: "Logged out"});

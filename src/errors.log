@@ -1,0 +1,20 @@
+fatal: GET con /loggerTest - 22/7/2023
+error: TEST - Error
+fatal: TEST - Fatal
+fatal: GET con /favicon.ico - 22/7/2023
+fatal: undefined {"view":{"defaultEngine":"handlebars","ext":".handlebars","name":"notFound","root":"C:\\Users\\Admin\\Desktop\\proyecto2\\src\\utils/views"}}
+fatal: GET con /loggerTest - 22/7/2023
+error: TEST - Error
+fatal: TEST - Fatal
+fatal: GET con /favicon.ico - 22/7/2023
+fatal: undefined {"view":{"defaultEngine":"handlebars","ext":".handlebars","name":"notFound","root":"C:\\Users\\Admin\\Desktop\\proyecto2\\src\\utils/views"}}
+fatal: GET con /loggerTest - 22/7/2023
+error: TEST - Error
+fatal: TEST - Fatal
+fatal: GET con /favicon.ico - 22/7/2023
+fatal: undefined {"view":{"defaultEngine":"handlebars","ext":".handlebars","name":"notFound","root":"C:\\Users\\Admin\\Desktop\\proyecto2\\src\\utils/views"}}
+fatal: GET con /loggerTest - 22/7/2023
+error: TEST - Error
+fatal: TEST - Fatal
+fatal: GET con /favicon.ico - 22/7/2023
+fatal: undefined {"view":{"defaultEngine":"handlebars","ext":".handlebars","name":"notFound","root":"C:\\Users\\Admin\\Desktop\\proyecto2\\src\\utils/views"}}

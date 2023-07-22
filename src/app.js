@@ -1,5 +1,5 @@
 import express from 'express';
-import __dirname from './utils.js';
+import __dirname from './utils/utils.js';
 import mongoose from 'mongoose';
 import passport from 'passport';
 import cookieParser from 'cookie-parser';
@@ -17,6 +17,8 @@ import messageRouter from './routes/messages.routes.js'
 import config from './config/config.js';
 import { connection } from './dao/factory.js';
 import errorHandler from './middlewares/errors/index.js';
+import { addLogger, logger } from './utils/logger.js';
+
 import { messages as Message } from './dao/factory.js';
 
 const mm = new Message();
@@ -29,6 +31,7 @@ const port = 3000;
 app.use(cookieParser());
 initPassport();
 app.use(passport.initialize());
+app.use(addLogger);
 
 app.engine('handlebars', handlebars.engine());
 app.set("views", __dirname+"/views");
@@ -37,6 +40,16 @@ app.set("view engine", 'handlebars');
 app.use(express.static(__dirname + "/public"));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
+
+app.get('/loggerTest', (req, res) => {
+    req.logger.debug("TEST - Debug");
+    req.logger.http("TEST - HTTP");
+    req.logger.info("TEST - Info");
+    req.logger.warning("TEST - Warning");
+    req.logger.error("TEST - Error");
+    req.logger.fatal("TEST - Fatal");
+    res.send({status: "Ok", message: "LoggerTest excecuted successfully"});
+})
 
 app.use('/api/carts', cartRouter);
 app.use('/api/products', productRouter);

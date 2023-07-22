@@ -3,7 +3,7 @@ import { dirname } from 'path';
 import bcrypt from 'bcrypt';
 import nodemailer  from 'nodemailer';
 
-import config from './config/config.js';
+import config from '../config/config.js';
 
 export const createHash = password => bcrypt.hashSync(password, bcrypt.genSaltSync(parseInt(config.bcryptGenSalt)));
 // Irreversible

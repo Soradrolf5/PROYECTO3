@@ -2,13 +2,20 @@ import {faker} from '@faker-js/faker';
 import { tickets as Ticket } from '../dao/factory.js';
 import { CartsService as cm, ProductsService as pm } from '../dao/repository/index.js';
 
-import { CustomError, errorCodes, generateErrorInfo } from '../errors.js';
+import { CustomError, errorCodes, generateErrorInfo } from '../utils/errors.js';
+
+const tm = new Ticket();
 
 export default class CartController {
     get = async(req, res) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             let carts = await cm.get();
-            if (!carts) CustomError.createError({cause: generateErrorInfo.getEmptyDatabase(), message: "No info avaliable", code: 3});
+            if (!carts) {
+                CustomError.createError({cause: generateErrorInfo.getEmptyDatabase(), message: "No info avaliable", code: 3});
+                req.logger.warning('La base de datos de carts está vacía');
+            }
             res.send({status: "Ok", payload: carts});
         } catch (error) {
             next(error);
@@ -16,13 +23,20 @@ export default class CartController {
     }
 
     getOne = async(req, res, next) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             let cid = req.params.cid;
-            if (cid.length != 24) CustomError.createError({statusCode: 400, name: "Error leyendo la base de datos", cause: generateErrorInfo.getId(cid), message: "Cart ID not valid", code: 2});
+            if (cid.length != 24) {
+                CustomError.createError({statusCode: 400, name: "Error leyendo la base de datos", cause: generateErrorInfo.getId(cid), message: "Cart ID not valid", code: 2});
+                req.logger.error(`El Cart ID proporcionado es invalido: ${cid} en la ruta ${req.url}`);
+            }
             let carts = await cm.getOne(cid);
-            console.log(carts)
-            if (!carts) CustomError.createError({name: "Error leyendo la base de datos", cause: generateErrorInfo.getEmptyDatabase(), message: "No info avaliable", code: 3})
-                // res.send({status: 404, error: "No info avaliable"})
+            req.logger.debug(carts)
+            if (!carts) {
+                CustomError.createError({name: "Error leyendo la base de datos", cause: generateErrorInfo.getEmptyDatabase(), message: "No info avaliable", code: 3})
+                req.logger.warning(`La base de datos de carts está vacía. Ruta: ${req.url}`);
+            }
             res.send({status: "Ok", payload: carts});
         } catch (error) {
             next(error);
@@ -30,11 +44,15 @@ export default class CartController {
     }
 
     post = async(req, res) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         let result = await cm.post();
         res.send({status: "Ok", payload: result});
     }
 
     postPurchase = async(req, res) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             let cid = req.params.cid;
             
@@ -54,7 +72,10 @@ export default class CartController {
                 }
             });
 
-            if (!valid) CustomError.createError({statusCode: 400, name: "No products added", cause: generateErrorInfo.getEmptyDatabase(), message: "There was no product that could be purchased", code: 4}) //return res.send({status: 400, message: "You need to have products you can buy"});
+            if (!valid) {
+                CustomError.createError({statusCode: 400, name: "No products added", cause: generateErrorInfo.getEmptyDatabase(), message: "There was no product that could be purchased", code: 4});
+                req.logger.error("No hay productos para comprar");
+            }
 
             cart.products = cartProducts;
             cm.put(cart._id, cart);
@@ -72,6 +93,8 @@ export default class CartController {
     }
 
     put = async(req, res) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             let cid = req.params.cid;
             let products = req.body;
@@ -107,13 +130,18 @@ export default class CartController {
     }
 
     putProduct = async(req, res) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             let cid = req.params.cid;
             let pid = req.params.pid;
             let {quantity} = req.body;
             
             let cart = await cm.getOne(cid);
-            if (!cart) CustomError.createError({statusCode: 404, name: "Cart doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
+            if (!cart) {
+                CustomError.createError({statusCode: 404, name: "Cart doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
+                req.logger.error(`El cart ID no es válido: ${cid} en ${req.url}`);
+            }
             let exist = false;
             cart.products.forEach(product => {
                 if (product._id == pid) {
@@ -126,16 +154,23 @@ export default class CartController {
                 return res.send({status: "Ok", payload: result});
             }
             CustomError.createError({statusCode: 404, name: "Product doesnt exist in cart", cause: generateErrorInfo.idNotFound(), code: 2})
+            req.logger.error(`El producto ${pid} no existe en ${cid}. Ruta ${req.url}`);
         } catch (error) {
             next(error);
         }
     }
 
     delete = async(req, res) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             const id = req.params.cid;
             let cart = await cm.getOne(cid);
-            if (!cart) CustomError.createError({statusCode: 404, name: "Cart doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
+            if (!cart) {
+                CustomError.createError({statusCode: 404, name: "Cart doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
+                req.logger.error(`El cart ID no es válido: ${cid} en ${req.url}`);
+
+            }
             let result = await cm.deleteCart(id);
             res.send({status: "Ok", payload: result});
         } catch (error) {
@@ -144,7 +179,8 @@ export default class CartController {
     }
 
     deleteProduct = async(req, res) => {
-        asdf
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
         try {
             const id = req.params.cid;
             let productId = req.params.pid;
@@ -153,16 +189,19 @@ export default class CartController {
             
             if (!productExist) {
                 CustomError.createError({statusCode: 404, name: "Product doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
+                req.logger.error(`El product ID no es válido: ${productId} en el cart ${id}. Ruta ${req.url}`);
             } else {
                 let cart = await cm.getOne(id);
         
                 if (!cart) {
                     CustomError.createError({statusCode: 404, name: "Cart doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
+                    req.logger.error(`El cart ID no es válido: ${id} en ${req.url}`);
                 } else {
                     let productsInCart = cart.products;
                     let idToSearch = (element) => element.id === productId;
                     if (idToSearch == -1) {
                         CustomError.createError({statusCode: 404, name: "Product doesnt exist in cart", cause: generateErrorInfo.idNotFound(), code: 2})
+                        req.logger.error(`El product ID no es válido: ${productId} en el cart ${id}. Ruta ${req.url}`);
                     } else {
                         let position = productsInCart.findIndex(idToSearch);
                         productsInCart.splice(position, 1);

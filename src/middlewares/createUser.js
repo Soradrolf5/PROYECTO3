@@ -1,7 +1,7 @@
 import userManager from "../dao/dbManagers/users.js";
 import CartManager from '../dao/dbManagers/carts.js';
 
-import {createHash, isValidPassword} from "../utils.js";
+import {createHash, isValidPassword} from "../utils/utils.js";
 
 const um = new userManager();
 const cm = new CartManager();
@@ -10,17 +10,17 @@ export const registerUser = async(req, res, next) => {
     const {first_name, last_name, age, email, password} = req.body;
     try {
         let user = await um.getOne({email: email});
-        console.log("user");
-        console.log("User: ", user);
+        req.logger.debug("user");
+        req.logger.debug("User: ", user);
         if (user != null) {
-            console.log("El usuario ya existe");
+            req.logger.debug("El usuario ya existe");
             return res.send({status: "error", message: "El usuario ya existe"});
         }
 
         let cartObj = await cm.post(); // Puede que rompa por no tener params
 
-        console.log("Cart")
-        console.log(cartObj)
+        req.logger.debug("Cart")
+        req.logger.debug(cartObj)
 
         let cart = cartObj._id
 
@@ -33,15 +33,15 @@ export const registerUser = async(req, res, next) => {
             cart
         }
 
-        console.log("Hi")
+        req.logger.debug("Hi")
         req.user = result;
 
         let newUser = await um.post(result);
         
         next();
     } catch(error) {
-        console.log("Error")
-        console.log(error)
+        req.logger.debug("Error")
+        req.logger.debug(error)
         next(error)
     }
 }
