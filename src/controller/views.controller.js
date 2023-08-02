@@ -1,3 +1,5 @@
+import jwt from 'jsonwebtoken'
+import config from '../config/config.js';
 import { CartsService as cm, ProductsService as pm } from '../dao/repository/index.js';
 import { CustomError, generateErrorInfo } from '../utils/errors.js';
 
@@ -29,8 +31,8 @@ export default class ViewController {
         
             page = parseInt(page);
             let nextLink, prevLink;
-            (products.hasNextPage == true ) ? nextLink = `http://localhost:3000/?limit=${limit}&page=${page+1}&query=${query}` : nextLink = null;
-            (products.hasPrevPage == true ) ? prevLink = `http://localhost:3000/?limit=${limit}&page=${page-1}&query=${query}` : prevLink = null;
+            (products.hasNextPage == true ) ? nextLink = `http://localhost:8080/?limit=${limit}&page=${page+1}&query=${query}` : nextLink = null;
+            (products.hasPrevPage == true ) ? prevLink = `http://localhost:8080/?limit=${limit}&page=${page-1}&query=${query}` : prevLink = null;
         
             let hasNextPage = products.hasNextPage, hasPrevPage = products.hasPrevPage;
             products = products.docs;
@@ -106,6 +108,8 @@ export default class ViewController {
         let isLogin;
         let user;
         
+        req.logger.debug(`req.user: ${req.user}`)
+
         if (!req.user) {
             isLogin = false;
             user = {};
@@ -114,16 +118,24 @@ export default class ViewController {
             user = req.user;
         }
     
+        req.logger.debug(`User: ${user}`);
+
         if (!isLogin) {
             return res.render('login');
         }
     
         let isAdmin = false;
+        let isPremium = false;
         if (user.role == "admin") {
             isAdmin = true;
+        } else if (user.role == "premium") {
+            isPremium = true;
         }
     
-        res.render('user', {user, isAdmin})
+        req.logger.debug(`User email: ${user.email}`);
+        req.logger.debug(`User role: ${user.role}`);
+
+        res.render('user', {user, isAdmin, isPremium});
     }
 
     getChat = (req, res, next) => {
@@ -156,5 +168,43 @@ export default class ViewController {
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
 
         res.render('unauthorized');
+    }
+
+    getRecover = (req, res) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
+        res.render("recover")
+    }
+
+    getRecoverLanding = (req, res) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
+        try {
+            let token = req.params.token;
+            req.logger.debug(token);
+            
+            let result;
+
+            jwt.verify(token, config.jwtKey, function(error, decoded) {
+                if (error) {
+                    if (error instanceof jwt.TokenExpiredError) {
+                        result = "EXPIRED";
+                    }
+                } else {
+                    result = decoded;
+                }
+            });
+
+            if (result == "EXPIRED") {
+                req.logger.debug("Expiró")
+                let hasExpired = true;
+                return res.render('recoverLanding', {hasExpired});
+            }
+
+            res.render('recoverLanding', {token});
+        } catch (error) {
+            req.logger.error(error);
+            res.render('error');
+        }
     }
 }

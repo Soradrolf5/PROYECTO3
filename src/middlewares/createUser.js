@@ -17,7 +17,7 @@ export const registerUser = async(req, res, next) => {
             return res.send({status: "error", message: "El usuario ya existe"});
         }
 
-        let cartObj = await cm.post(); // Puede que rompa por no tener params
+        let cartObj = await cm.post();
 
         req.logger.debug("Cart")
         req.logger.debug(cartObj)
@@ -33,7 +33,7 @@ export const registerUser = async(req, res, next) => {
             cart
         }
 
-        req.logger.debug("Hi")
+        req.logger.debug("Hi");
         req.user = result;
 
         let newUser = await um.post(result);

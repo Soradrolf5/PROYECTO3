@@ -25,8 +25,6 @@ form.addEventListener('submit', event => {
             }
         })
         .then(res => res.json()).then(json => {
-            console.log(json)
-            console.log(json.body)
             if (json.status == 'Ok') {
                 Swal.fire({
                     icon: 'success',
@@ -38,7 +36,7 @@ form.addEventListener('submit', event => {
                 Swal.fire({
                     icon: 'error',
                     title: 'Oops, the credentials arent valid',
-                    text: json.error || "Verify your mail and password"
+                    text: json.error || "Verify your email and password"
                 })
             }
         })

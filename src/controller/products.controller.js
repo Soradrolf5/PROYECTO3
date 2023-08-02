@@ -83,13 +83,16 @@ export default class ProductController {
                 stock,
                 thumbnails
             }
-        
+
             if (!title || !description || !code || !price || !stock) {
-                CustomError.createError({statusCode: 404, name: "Some data is missing", cause: generateErrorInfo.getEmptyDatabase(), code: 4});
                 req.logger.error(`Hay datos faltantes en ${req.url}`);
+                CustomError.createError({statusCode: 404, name: "Some data is missing", cause: generateErrorInfo.getEmptyDatabase(), code: 4});
             }
 
-            const result = await pm.saveProduct(newProduct);
+            if (req.user.user.role == "admin") newProduct.owner = 'admin';
+            if (req.user.user.role == "premium") newProduct.owner = req.user.user.email;
+
+            const result = await pm.post(newProduct);
             res.send({status: "Ok", payload: result});
         } catch(error) {
             next(error);
@@ -112,10 +115,14 @@ export default class ProductController {
                 thumbnails
             }
             
-            let exists = pm.getOne(id);
+            let exists = await pm.getOne(id);
             if (!exists) {
                 CustomError.createError({statusCode: 400, name: "Product doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
                 req.logger.error(`El product ID no es válido: ${id} en ${req.url}`);
+            }
+
+            if (req.user.user.role == "premium") {
+                if (req.user.user.email != exists.owner) CustomError.createError({statusCode: 401, name: "Product isnt yours", cause: generateErrorInfo.unauthorized(), code: 2});
             }
 
             let result = await pm.put(id, newProduct);
@@ -131,10 +138,14 @@ export default class ProductController {
         try {
             const id = req.params.pid;
     
-            let exists = pm.getOne(id);
+            let exists = await pm.getOne(id);
             if (!exists) {
                 CustomError.createError({statusCode: 400, name: "Product doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
                 req.logger.error(`El product ID no existe: ${id} en ${req.url}`);
+            }
+
+            if (req.user.user.role == "premium") {
+                if (req.user.user.email != exists.owner) CustomError.createError({statusCode: 401, name: "Product isnt yours", cause: generateErrorInfo.unauthorized(), code: 2});
             }
 
             let result = await pm.delete(id);

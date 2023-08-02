@@ -17,5 +17,20 @@ form.addEventListener('submit', event => {
         headers: {
             'Content-type': 'application/json'
         }
-    }).then(result => result.json()).then(json => console.log(json));
+    }).then(result => result.json()).then(json => {
+        console.log(json);
+        if (json.status == "Ok") {
+            Swal.fire({
+                icon: 'success',
+                title: 'Se ha enviado un mail',
+                text: 'Abrelo para poder reestablecer tu contraseña'
+            })
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops, the credentials arent valid',
+                text: json.message || "Verify your email and password"
+            })
+        }
+    });
 })

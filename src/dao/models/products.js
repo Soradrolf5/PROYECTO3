@@ -21,14 +21,21 @@ const productSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+
     stock: {
         type: Number,
         required: true
     },
+
     thumbnails: {
-        type: [String] 
+        type: String,
+    },
+
+    owner: {
+        type: String,
+        default:  "Admin"
     }
-});
+})
 
 productSchema.plugin(mongoosePaginate);
 const productsModel = mongoose.model(productsCollection, productSchema);

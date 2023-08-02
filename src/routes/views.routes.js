@@ -1,5 +1,4 @@
 import { Router } from "express";
-import passport from "passport";
 
 import ViewController from "../controller/views.controller.js";
 import { userData } from "../middlewares/userData.js";
@@ -20,6 +19,10 @@ router.get('/login', vc.getLogin);
 router.get('/user', userData, vc.getUser);
 
 router.get('/chat', userData, vc.getChat);
+
+router.get('/recover/', vc.getRecover);
+
+router.get('/recoverLanding/:token', vc.getRecoverLanding);
 
 router.get('*', vc.getAll)
 
