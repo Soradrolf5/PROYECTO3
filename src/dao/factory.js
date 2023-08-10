@@ -22,7 +22,7 @@ switch (config.persistence) {
     case "MEMORY":
         const {default: usersMemory} = await import('./memory/users.js');
         const {default: cartsMemory} = await import('./memory/cartManager.js');
-        const {default: productsMemory} = await import('./memory/productManager.js');
+        const {default: productsMemory} = await import('./memory/productsManager.js');
         const {default: ticketsMemory} = await import('./memory/tickets.js');
         const {default: messagesMemory} = await import('./memory/messagesManager.js')
         users = usersMemory;

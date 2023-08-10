@@ -78,7 +78,7 @@ export default class SessionController {
             let token = jwt.sign({email}, config.jwtKey, {expiresIn: "1h"});
             req.logger.debug("Pre nodemailer")
             try {
-                transport.sendMail({from: 'benjabastan@gmail.com',
+                transport.sendMail({from: 'flordaros5@gmail.com',
                 to: email,
                 subject: 'Reestablece tu contraseña',
                 html: `

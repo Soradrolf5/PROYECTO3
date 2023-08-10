@@ -4,6 +4,8 @@ import mongoose from 'mongoose';
 import passport from 'passport';
 import cookieParser from 'cookie-parser';
 import handlebars from 'express-handlebars';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUiExpress from 'swagger-ui-express';
 import { Server } from 'socket.io';
 
 import initPassport from './config/passport.config.js';
@@ -26,7 +28,6 @@ const mm = new Message();
 mongoose.set("strictQuery", false); // Quita el warning
 
 const app = express();
-const port = 3000;
 
 app.use(cookieParser());
 initPassport();
@@ -40,6 +41,20 @@ app.set("view engine", 'handlebars');
 app.use(express.static(__dirname + "/public"));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
+
+const swaggerOptions = {
+    definition: {
+        openapi: '3.0.1',
+        info: {
+            title: "Documentacion de las API",
+            description: "APIs desarrolladas que conforman parte del proyecto"
+        }
+    },
+    apis: [`./docs/**.yaml`] // Sin /src si es con nodemon app.js
+};
+
+const specs = swaggerJsdoc(swaggerOptions);
+app.use('/apidocs', swaggerUiExpress.serve, swaggerUiExpress.setup(specs));
 
 app.get('/loggerTest', (req, res) => {
     req.logger.debug("TEST - Debug");
@@ -58,9 +73,9 @@ app.use('/api/tickets', ticketRouter);
 app.use('/api/chat', messageRouter);
 app.use('/', viewsRouter);
 
-app.use(errorHandler)
+app.use(errorHandler);
 
-const httpServer = app.listen(port, () => console.log(`Server listening on port ${port}`));
+const httpServer = app.listen(config.port || 8080, () => logger.info(`Server listening on port ${config.port || 8080}`));
 
 export const io = new Server(httpServer);
 

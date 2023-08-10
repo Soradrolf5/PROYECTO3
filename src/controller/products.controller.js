@@ -38,8 +38,8 @@ export default class ProductController {
             }
             query = query.replace(" ",""); // Quita un espacio por las dudas
         
-            (products.hasNextPage == true ) ? nextLink = `http://localhost:8080/api/products/?limit=${limit}&page=${page+1}&query=${query}` : nextLink = null;
-            (products.hasPrevPage == true ) ? prevLink = `http://localhost:8080/api/products/?limit=${limit}&page=${page-1}&query=${query}` : prevLink = null;
+            (products.hasNextPage == true ) ? nextLink = `http://localhost:3000/api/products/?limit=${limit}&page=${page+1}&query=${query}` : nextLink = null;
+            (products.hasPrevPage == true ) ? prevLink = `http://localhost:3000/api/products/?limit=${limit}&page=${page-1}&query=${query}` : prevLink = null;
             
             if (!products) {
                 CustomError.createError({statusCode: 500, name: "No info avaliable", cause: generateErrorInfo.getEmptyDatabase(), code: 3});
