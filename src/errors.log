@@ -181,3 +181,22 @@ fatal: GET con /apidocs/swagger-ui-bundle.js - 10/8/2023
 fatal: GET con /apidocs/swagger-ui-standalone-preset.js - 10/8/2023
 fatal: GET con /apidocs/swagger-ui-init.js - 10/8/2023
 fatal: GET con /apidocs/favicon-32x32.png - 10/8/2023
+fatal: POST con /api/session/register - 16/8/2023
+fatal: POST con /api/session/login - 16/8/2023
+fatal: POST con /api/session/login - 16/8/2023
+fatal: GET con /api/session/current - 16/8/2023
+fatal: POST con /api/session/premium/flordaros5@gmail.com - 16/8/2023
+fatal: GET con /api/session/current - 16/8/2023
+fatal: GET con /api/products - 16/8/2023
+fatal: GET con /api/products/mockProducts - 16/8/2023
+fatal: POST con /api/products/ - 16/8/2023
+fatal: undefined
+fatal: POST con /api/products/ - 16/8/2023
+fatal: POST con /api/products/ - 16/8/2023
+fatal: undefined {"code":11000,"index":0,"keyPattern":{"code":1},"keyValue":{"code":"p0t4t0"}}
+fatal: DELETE con /api/products/64dd71c4ac004dedd663f9dc - 16/8/2023
+fatal: POST con /api/products/ - 16/8/2023
+fatal: GET con /api/carts - 16/8/2023
+fatal: PUT con /api/carts/64dd71c1ac004dedd663f9d1 - 16/8/2023
+fatal: PUT con /api/carts/64dd71c1ac004dedd663f9d1 - 16/8/2023
+fatal: DELETE con /api/carts/64dd71c1ac004dedd663f9d1/product/64dd71c4ac004dedd663f9e2 - 16/8/2023
