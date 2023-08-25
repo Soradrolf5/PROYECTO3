@@ -14,9 +14,7 @@ export const userData = (req, res, next) => {
     } else {
         isLogin = true;
         user = jwt.verify(cookie, config.jwtKey);
-        console.log(user);
         req.user = user.user;
-        console.log(req.user);
         next();
     }
 }

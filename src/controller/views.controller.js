@@ -77,6 +77,7 @@ export default class ViewController {
             if (!req.user) {
                 isLogin = false;
                 user = {};
+                return res.render('login');
             } else {
                 isLogin = true
                 user = req.user;
@@ -204,6 +205,28 @@ export default class ViewController {
             res.render('recoverLanding', {token});
         } catch (error) {
             req.logger.error(error);
+            res.render('error');
+        }
+    }
+
+    getUserDocuments = (req, res) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+        
+        try {
+            let isLogin;
+            let user;
+
+            if (!req.user) {
+                isLogin = false;
+                user = {};
+            } else {
+                isLogin = true
+                user = req.user;
+            }
+
+            res.render('documents', {isLogin, user});
+        } catch(error) {
+            console.log(error);
             res.render('error');
         }
     }

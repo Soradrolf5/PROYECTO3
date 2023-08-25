@@ -22,6 +22,8 @@ router.get('/chat', userData, vc.getChat);
 
 router.get('/recover/', vc.getRecover);
 
+router.get('/documents', userData, vc.getUserDocuments);
+
 router.get('/recoverLanding/:token', vc.getRecoverLanding);
 
 router.get('*', vc.getAll)

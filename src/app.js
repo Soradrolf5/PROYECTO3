@@ -75,7 +75,7 @@ app.use('/', viewsRouter);
 
 app.use(errorHandler);
 
-const httpServer = app.listen(config.port || 8080, () => logger.info(`Server listening on port ${config.port || 8080}`));
+const httpServer = app.listen(config.port || 3000, () => logger.info(`Server listening on port ${config.port || 8080}`));
 
 export const io = new Server(httpServer);
 

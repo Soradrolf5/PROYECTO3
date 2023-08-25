@@ -95,14 +95,16 @@ export default class CartController {
     put = async(req, res, next) => {
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
 
+        req.logger.debug("Llegue al put")
+
         try {
             let cid = req.params.cid;
             if (req.user.user.cart[0] != cid) return res.status(401).send({status: "error", message: "El carrito no pertenece al usuario"})
             let products = req.body;
         
             let cart = await cm.getOne(cid);
+
             let cartProducts = cart.products;
-        
             let ids = [];
             if (cartProducts.length > 0) {
                 cartProducts.forEach(product => {
@@ -132,6 +134,7 @@ export default class CartController {
             if (isInvalid) return res.send({status: "error", message: "You cant add your products to your own cart"});
         
             cart.products = cartProducts;
+            // console.log(cart)
             let result = await cm.put(cid, cart);
             res.send(result);
         } catch (error) {
@@ -198,20 +201,20 @@ export default class CartController {
             let productExist = await pm.getOne(productId);
             
             if (!productExist) {
-                CustomError.createError({statusCode: 404, name: "Product doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
                 req.logger.error(`El product ID no es válido: ${productId} en el cart ${id}. Ruta ${req.url}`);
+                CustomError.createError({statusCode: 404, name: "Product doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
             } else {
                 let cart = await cm.getOne(id);
         
                 if (!cart) {
-                    CustomError.createError({statusCode: 404, name: "Cart doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
                     req.logger.error(`El cart ID no es válido: ${id} en ${req.url}`);
+                    CustomError.createError({statusCode: 404, name: "Cart doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
                 } else {
                     let productsInCart = cart.products;
                     let idToSearch = (element) => element.id === productId;
                     if (idToSearch == -1) {
-                        CustomError.createError({statusCode: 404, name: "Product doesnt exist in cart", cause: generateErrorInfo.idNotFound(), code: 2})
                         req.logger.error(`El product ID no es válido: ${productId} en el cart ${id}. Ruta ${req.url}`);
+                        CustomError.createError({statusCode: 404, name: "Product doesnt exist in cart", cause: generateErrorInfo.idNotFound(), code: 2})
                     } else {
                         let position = productsInCart.findIndex(idToSearch);
                         productsInCart.splice(position, 1);

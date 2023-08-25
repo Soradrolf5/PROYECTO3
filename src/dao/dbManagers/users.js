@@ -15,4 +15,12 @@ export default class userManager {
         let result = userModel.updateOne({email}, user);
         return result;
     }
+
+    editLastConnection = async(user, lastConnection) => {
+        user.last_connection = lastConnection;
+
+        let result = await userModel.updateOne({email: user.email}, user)
+
+        return result;
+    }
 }

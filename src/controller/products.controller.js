@@ -38,12 +38,12 @@ export default class ProductController {
             }
             query = query.replace(" ",""); // Quita un espacio por las dudas
         
-            (products.hasNextPage == true ) ? nextLink = `http://localhost:3000/api/products/?limit=${limit}&page=${page+1}&query=${query}` : nextLink = null;
-            (products.hasPrevPage == true ) ? prevLink = `http://localhost:3000/api/products/?limit=${limit}&page=${page-1}&query=${query}` : prevLink = null;
+            (products.hasNextPage == true ) ? nextLink = `http://localhost:8080/api/products/?limit=${limit}&page=${page+1}&query=${query}` : nextLink = null;
+            (products.hasPrevPage == true ) ? prevLink = `http://localhost:8080/api/products/?limit=${limit}&page=${page-1}&query=${query}` : prevLink = null;
             
             if (!products) {
-                CustomError.createError({statusCode: 500, name: "No info avaliable", cause: generateErrorInfo.getEmptyDatabase(), code: 3});
                 req.logger.warning('La base de datos de products está vacía');
+                CustomError.createError({statusCode: 500, name: "No info avaliable", cause: generateErrorInfo.getEmptyDatabase(), code: 3});
 
             }
             res.send({status: "Ok", payload: products.docs, totalPages: products.totalPages, prevPage: products.prevPage, nextPage: products.nextPage, page: products.page, hasPrevPage: products.hasPrevPage, hasNextPage: products.hasNextPage, nextLink: nextLink, prevLink: prevLink});
@@ -140,8 +140,8 @@ export default class ProductController {
     
             let exists = await pm.getOne(id);
             if (!exists) {
-                CustomError.createError({statusCode: 400, name: "Product doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
                 req.logger.error(`El product ID no existe: ${id} en ${req.url}`);
+                CustomError.createError({statusCode: 400, name: "Product doesnt exist", cause: generateErrorInfo.idNotFound(), code: 2});
             }
 
             if (req.user.user.role == "premium") {
