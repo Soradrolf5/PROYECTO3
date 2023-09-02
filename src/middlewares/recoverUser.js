@@ -10,7 +10,7 @@ export const recoverUser = async(req, res, next) => {
     
     try {
         const user = await um.getOne({email});
-        console.log(user)
+        // console.log(user)
         if (!user) {
             req.logger.info("El usuario no existe");
             return res.send({status: "error", message: "El usuario no existe"});

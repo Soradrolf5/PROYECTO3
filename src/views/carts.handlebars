@@ -1,8 +1,8 @@
 <link rel="stylesheet" href="../css/styles.css">
 <header>
-  <a href="/">Home</a>
-  <h1>Cart ID {{cart._id}}</h1>
-  <div>
+  <a href="/" class="headerDiv">Home</a>
+  <h1>Cart ID <span id="cid">{{cart._id}}</span></h1>
+  <div class="headerDiv toRight">
     {{#if isLogin}}
       <a href="/user">Bienvenido {{user.first_name}} {{user.last_name}}</a>
     {{else}}
@@ -25,7 +25,9 @@
             </div>
         {{/each}}
     </div>
-    <form action="/api/carts/{{cart._id}}/purchase" method="post">
+    <form action="" method="post" id="buyProducts">
         <button type="submit">Comprar productos</button>
     </form>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/carts.js"></script>
 </main>

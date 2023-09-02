@@ -15,7 +15,7 @@ export const recoverPassword = async(req, res, next) => {
 
     let result;
 
-    console.log("Verificacion");
+    req.logger.info("Verificacion");
     jwt.verify(token, config.jwtKey, function(error, decoded) {
         req.logger.debug("El token es");
         req.logger.debug(token)

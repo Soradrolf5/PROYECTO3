@@ -6,6 +6,11 @@ export default class userManager {
         return result;
     }
 
+    getAll = async() => {
+        let result = userModel.find();
+        return result;
+    }
+
     getOne = async(search) => {
         let result = userModel.findOne(search);
         return result;
@@ -22,5 +27,22 @@ export default class userManager {
         let result = await userModel.updateOne({email: user.email}, user)
 
         return result;
+    }
+
+    deleteMany = async(users) => {
+        let wentWrong = [];
+
+        users.forEach(async(user) => {
+            let result = await userModel.deleteOne({email: user});
+            console.log(result);
+            if (!result.acknowledged) wentWrong.push(user);
+        });
+
+        return wentWrong;
+    }
+
+    deleteOne = async(email) => {
+        let result = userModel.deleteOne({email});
+        return result; 
     }
 }

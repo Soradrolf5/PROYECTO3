@@ -3,6 +3,7 @@ import { CartsService as cm, ProductsService as pm } from '../dao/repository/ind
 import { CustomError, errorCodes, generateErrorInfo } from '../utils/errors.js';
 
 import {faker} from '@faker-js/faker';
+import { transport } from '../utils/utils.js';
 
 const tm = new Ticket();
 
@@ -45,6 +46,7 @@ export default class TicketController {
 
         try {
             let cid = req.params.cid;
+
             let cart = await cm.getOne(cid);
             let cartProducts = cart.products;
             let ticketTotal = 0;
@@ -74,6 +76,19 @@ export default class TicketController {
             let user = req.user.user.email;
 
             tm.post({code, purchaser: user, purchase_datetime: date, amount: ticketTotal});
+
+            try {
+                transport.sendMail({
+                    from: 'flordaros5@gmail.com',
+                    to: user,
+                    subject: 'Gracias por comprar',
+                    html: `
+                    <div style="background-color: black; color: green; display: flex; flex-direction: column; justify-content: center;  align-items: center;">
+                    <h1>Tu ticket es ${code} y el total es ${ticketTotal}</h1>
+                    </div>
+                    `
+                });
+            } catch (error) {}
 
             res.send({status: "Ok", message: "Hope you like what you bought", payload: `The code of the ticket is ${code} and the total is ${ticketTotal}`});
         } catch(error) {

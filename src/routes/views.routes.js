@@ -2,6 +2,8 @@ import { Router } from "express";
 
 import ViewController from "../controller/views.controller.js";
 import { userData } from "../middlewares/userData.js";
+import { isAdmin } from "../middlewares/isAdmin.js";
+import { userRole } from "../middlewares/userRole.js";
 
 const router = Router();
 const vc = new ViewController();
@@ -25,6 +27,10 @@ router.get('/recover/', vc.getRecover);
 router.get('/documents', userData, vc.getUserDocuments);
 
 router.get('/recoverLanding/:token', vc.getRecoverLanding);
+
+router.get('/viewUsers', isAdmin, vc.getAllUsers);
+
+router.get('/newProduct', userRole, vc.getNewProduct)
 
 router.get('*', vc.getAll)
 

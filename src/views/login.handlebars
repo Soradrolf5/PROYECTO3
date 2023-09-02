@@ -1,19 +1,20 @@
 <link rel="stylesheet" href="/css/styles.css">
 <header>
-    <div></div>
+    <div class="headerDiv"></div>
     <h1>Inicia sesion</h1>
-    <div></div>
+    <div class="headerDiv toRight"></div>
 </header>
 <main>
     <form action="" method="post" id="loginForm" class="form">
         <div class="formOrder">
-            <p class="formText">Correo electrónico</p> <input type="text" name="email">
+            <p class="formText">Correo electrónico</p> <input type="email" name="email">
             <p class="formText">Contraseña</p> <input type="password" name="password">
         </div>
         <button type="submit" class="submit">Iniciar sesión</button>
     </form>
     <div class="switch">
-        <p>Crea tu cuenta <a href="http://localhost:3000/register">aqui</a></p>
+        <p>Crea tu cuenta <a href="/register">aqui</a></p>
+        <p>Restablece tu contraseña <a href="/recover">aquí</a></p>
     </div>
 </main>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>

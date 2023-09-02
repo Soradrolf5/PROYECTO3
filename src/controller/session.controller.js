@@ -1,4 +1,6 @@
 import jwt from 'jsonwebtoken';
+import moment from 'moment/moment.js';
+
 import Dto from '../dao/dto/dto.js';
 
 import config from '../config/config.js';
@@ -15,6 +17,21 @@ export default class SessionController {
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
 
         res.send(dto.getCurrent(req.user.user));
+    }
+
+    getAll = async(req, res, next) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
+        try {
+            let dbUsers = await um.getAll();
+            let users = [];
+
+            dbUsers.forEach(user => users.push(dto.getCurrent(user)));
+            
+            res.send({status: 'Ok', payload: users});
+        } catch (error) {
+            next(error)
+        }
     }
     
     postRegister = async(req, res, next) => {
@@ -136,14 +153,10 @@ export default class SessionController {
                 documents: dbUser.documents
             }
 
-            
-
             if (dbUser.role == "admin") CustomError.createError({ statusCode: 401, name: "Admin users cant swap roles", cause: generateErrorInfo.unauthorized(), code: 6});
             if (dbUser.role == "user") {
 
-                console.log(user.documents)
-
-                if (user.documents.lenght != 3) return res.send({ status: 'error', message: "Necesitas subir todos los documentos"});
+                if (user.documents.length != 3) return res.send({ status: 'error', message: "Necesitas subir todos los documentos"});
 
                 dbUser.role = "premium";
                 let result = await um.editOne(email, dbUser);
@@ -255,5 +268,102 @@ export default class SessionController {
         } catch (error) {
             next(error);
         }
+    }
+
+    postSwapRoleForced = async(req, res, next) => {
+        try {
+            let user = await um.getOne({email: req.params.uid});
+
+            if (!user) return res.send({status: "error", message: "El usuario no existe"});
+
+            if (user.role == "admin") return res.send({status: "error", message: "No se puede modificar el rol de un usuario administrador"});
+
+            if (user.role == "user") user.role = "premium"; else if (user.role == "premium") user.role = "user";
+
+            let result = await um.editOne(user.email, user);
+
+            if (!result.acknowledged) return res.send({status: "error", message: "Ha ocurrido un error"});
+
+            res.send({status: "Ok", message: `El usuario ${req.params.uid} ha cambiado a ${user.role}`});
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    deleteInactive = async(req, res, next) => {
+        try {
+            let users = await um.getAll();
+
+            let deleteUsers = [];
+
+            // const expirationTime = moment().subtract(30, 'minutes'); // Fecha de prueba
+            const expirationTime = moment().subtract(2, 'days'); // Fecha correcta
+            let count = 0;
+
+            users.forEach(user => {
+                if (!user.last_connection) {
+                    count += 1;
+                    deleteUsers.push(user.email);
+                    return;
+                }
+                let userDate = moment(user.last_connection, 'DD/MM/YYYY, hh:mm:ss');
+                if (userDate.isBefore(expirationTime) && user.role != "admin") {
+                    try {
+                        transport.sendMail({
+                            from: 'flordaros5@gmail.com',
+                            to: user.email,
+                            subject: 'Se ha eliminado tu cuenta debido a inactividad',
+                            html: `
+                            <div style="background-color: black; color: green; display: flex; flex-direction: column; justify-content: center;  align-items: center;">
+                            <h1>Tu cuenta ha sido eliminada!</h1>
+                            </div>
+                            `
+                        });
+                    } catch (error) {
+                        req.logger.error("El mail del usuario no es válido");
+                    }
+                    count += 1;
+                    deleteUsers.push(user.email);
+                }
+            })
+
+            let deleted = await um.deleteMany(deleteUsers);
+
+            if (deleted.length < 1) return res.send({status: 'Ok', message: `${count} cuentas fueron eliminadas con los mails ${deleteUsers}`});
+            res.send({status: 'error', message: `Las cuentas con los mails ${deleted} no han podido eliminarse`});
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    deleteUser = async(req, res, next) => {
+        let user = await um.getOne({email: req.params.uid});
+
+        if (!user) return res.send({status: "error", message: "El usuario no existe"});
+
+        if (user.role == "admin") return res.send({status: "error", message: "No se puede eliminar a un administrador"});
+
+        let result = await um.deleteOne(user.email);
+
+        if (result.acknowledged) {
+            try {
+                transport.sendMail({
+                    from: 'flordaros5@gmail.com',
+                    to: user.email,
+                    subject: 'Se ha eliminado tu cuenta debido a inactividad',
+                    html: `
+                    <div style="background-color: black; color: green; display: flex; flex-direction: column; justify-content: center;  align-items: center;">
+                    <h1>Tu cuenta ha sido eliminada!</h1>
+                    </div>
+                    `
+                });
+            } catch (error) {
+                req.logger.error("El mail del usuario no es válido");
+            }
+
+            return res.send({status: "Ok", message: `El usuario ${req.params.uid} fue eliminado`});
+        }
+
+        res.send({status: "error", message: "El usuario no fue eliminado"});
     }
 }

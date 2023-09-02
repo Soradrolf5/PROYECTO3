@@ -2,12 +2,18 @@ import jwt from 'jsonwebtoken'
 import config from '../config/config.js';
 import { CartsService as cm, ProductsService as pm } from '../dao/repository/index.js';
 import { CustomError, generateErrorInfo } from '../utils/errors.js';
+import userManager from '../dao/dbManagers/users.js';
+import Dto from '../dao/dto/dto.js';
+
+const um = new userManager();
+const dto = new Dto();
 
 export default class ViewController {
     get = async(req, res, next) => {
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
 
         try {
+            
             let isLogin;
             let user;
             
@@ -18,6 +24,12 @@ export default class ViewController {
                 isLogin = true
                 user = req.user;
             }
+            
+            let createProd = false;
+            if (user.role && user.role != 'user') createProd = true;
+
+            let viewUsers = false;
+            if (user.role == 'admin') viewUsers = true;
 
             let {limit = 10, page = 1, query = 'none', sort} = req.query;
             let products;
@@ -31,13 +43,13 @@ export default class ViewController {
         
             page = parseInt(page);
             let nextLink, prevLink;
-            (products.hasNextPage == true ) ? nextLink = `http://localhost:8080/?limit=${limit}&page=${page+1}&query=${query}` : nextLink = null;
-            (products.hasPrevPage == true ) ? prevLink = `http://localhost:8080/?limit=${limit}&page=${page-1}&query=${query}` : prevLink = null;
+            (products.hasNextPage == true ) ? nextLink = `http://localhost:3000/?limit=${limit}&page=${page+1}&query=${query}` : nextLink = null;
+            (products.hasPrevPage == true ) ? prevLink = `http://localhost:3000/?limit=${limit}&page=${page-1}&query=${query}` : prevLink = null;
         
             let hasNextPage = products.hasNextPage, hasPrevPage = products.hasPrevPage;
             products = products.docs;
         
-            res.render('home', {products, hasNextPage, hasPrevPage, nextLink, prevLink, page, isLogin, user});
+            res.render('home', {title: "Home", products, hasNextPage, hasPrevPage, nextLink, prevLink, page, isLogin, user, createProd, viewUsers});
         } catch(error) {
             req.logger.debug(error);
             next(error);
@@ -61,7 +73,7 @@ export default class ViewController {
 
             let cid = req.params.cid;
             let cart = await cm.getOne(cid);
-            res.render('carts', {cart, isLogin, user}); // Hacer que renderice los productos y tengas el carts/purchase
+            res.render('carts', {title: 'Carrito', cart, isLogin, user}); // Hacer que renderice los productos y tengas el carts/purchase
         } catch(error) {
             next(error)
         }
@@ -77,7 +89,7 @@ export default class ViewController {
             if (!req.user) {
                 isLogin = false;
                 user = {};
-                return res.render('login');
+                return res.render('login', {title: "Iniciar sesion"});
             } else {
                 isLogin = true
                 user = req.user;
@@ -85,7 +97,7 @@ export default class ViewController {
             let pid = req.params.pid;
             let product = await pm.getOne(pid);
             let cartId = user.cart[0];
-            res.render('product', {product, isLogin, user, cartId});
+            res.render('product', {title: `Producto ${product.title}`, product, isLogin, user, cartId});
         } catch(error) {
             next(error)
         }
@@ -94,13 +106,13 @@ export default class ViewController {
     getLogin = (req, res) => {
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
 
-        res.render('login');
+        res.render('login', {title: "Iniciar sesion"});
     }
 
     getRegister = (req, res) => {
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
 
-        res.render('register');
+        res.render('register', {title: "Registrarse"});
     }
 
     getUser = async(req, res) => {
@@ -122,7 +134,7 @@ export default class ViewController {
         req.logger.debug(`User: ${user}`);
 
         if (!isLogin) {
-            return res.render('login');
+            return res.render('login', {title: "Iniciar sesion"});
         }
     
         let isAdmin = false;
@@ -136,7 +148,7 @@ export default class ViewController {
         req.logger.debug(`User email: ${user.email}`);
         req.logger.debug(`User role: ${user.role}`);
 
-        res.render('user', {user, isAdmin, isPremium});
+        res.render('user', {title: `Usuario ${user.email}`, user, isAdmin, isPremium});
     }
 
     getChat = (req, res, next) => {
@@ -153,7 +165,7 @@ export default class ViewController {
             
             user = req.user;
 
-            res.render('chat', {user});
+            res.render('chat', {title: 'Chat', user});
         } catch(error) {
            next() 
         }
@@ -199,10 +211,10 @@ export default class ViewController {
             if (result == "EXPIRED") {
                 req.logger.debug("Expiró")
                 let hasExpired = true;
-                return res.render('recoverLanding', {hasExpired});
+                return res.render('recoverLanding', {title: 'Recuperar contraseña', hasExpired});
             }
 
-            res.render('recoverLanding', {token});
+            res.render('recoverLanding', {title: 'Recuperar contraseña', token});
         } catch (error) {
             req.logger.error(error);
             res.render('error');
@@ -224,10 +236,35 @@ export default class ViewController {
                 user = req.user;
             }
 
-            res.render('documents', {isLogin, user});
+            res.render('documents', {title: 'Subir documentos', isLogin, user});
         } catch(error) {
-            console.log(error);
+            req.logger.error(error);
             res.render('error');
         }
+    }
+
+    getAllUsers = async(req, res) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
+        try {
+             let dbUsers = await um.getAll();
+
+             let users = [];
+
+             dbUsers.forEach(user => {
+                if (user.role != 'admin') {
+                    users.push(dto.getDetailed(user));
+                }
+             });
+
+             res.render('viewUsers', {title: 'Controlar usuarios', users});
+        } catch (error) {
+            req.logger.error(error)
+            res.render('error')
+        }
+    }
+
+    getNewProduct = async(req, res) => {
+        res.render('newProduct', {title: "Nuevo producto"});
     }
 }

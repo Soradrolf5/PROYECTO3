@@ -33,8 +33,7 @@ export const registerUser = async(req, res, next) => {
             cart
         }
 
-        req.logger.debug("Hi");
-        req.user = result;
+        req.newUser = result;
 
         let newUser = await um.post(result);
         

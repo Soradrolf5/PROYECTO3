@@ -34,7 +34,6 @@ class CartManager {
             let carts = await JSON.parse(fs.readFileSync(`${this.path}carrito.json`, "utf-8"));
             let lastCart = await carts.pop()
             carts.push(lastCart);
-            console.log(carts)
             let cart = {
                 id: lastCart.id + 1,
                 objects: []
@@ -42,7 +41,6 @@ class CartManager {
             newCartId = lastCart.id + 1;
 
             carts.push(cart);
-            console.log(carts)
 
             carts = JSON.stringify(carts);
             fs.writeFileSync(`${this.path}carrito.json`, carts);
@@ -69,7 +67,6 @@ class CartManager {
                 return 'No se encuentra ningun carrito con ese ID';
             } else {
                 let products = await JSON.parse(fs.readFileSync(`${this.path}productos.json`, "utf-8"));
-                console.log(products);
                 let product = products.find(element => element.id == productId);
                 if (product == undefined) {
                     return 'No se encuentra ningun producto con ese ID';
@@ -82,7 +79,6 @@ class CartManager {
                     } else {
                         let cartProduct = cart.objects[position];
                         cartProduct.quantity += 1;
-                        console.log(cartProduct)
                         cart.objects.splice(position, 1, cartProduct);
                     }
                     let cartIdToSearch = (element) => element.id == cartId;

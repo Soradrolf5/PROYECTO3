@@ -5,7 +5,7 @@ const um = new userManager();
 
 export const loginUser = async(req, res, next) => {
     const {email, password} = req.body;
-    console.log(req.body)
+    // console.log(req.body)
     try {
         const user = await um.getOne({email});
         if (!user) {

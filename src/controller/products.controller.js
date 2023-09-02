@@ -1,6 +1,7 @@
 import { ProductsService as pm } from '../dao/repository/index.js';
 import { faker } from '@faker-js/faker';
 import { CustomError, generateErrorInfo } from '../utils/errors.js';
+import { transport } from '../utils/utils.js';
 
 export default class ProductController {
     get = async(req, res, next) => {
@@ -86,15 +87,49 @@ export default class ProductController {
 
             if (!title || !description || !code || !price || !stock) {
                 req.logger.error(`Hay datos faltantes en ${req.url}`);
-                CustomError.createError({statusCode: 404, name: "Some data is missing", cause: generateErrorInfo.getEmptyDatabase(), code: 4});
+                CustomError.createError({statusCode: 400, name: "Some data is missing", cause: generateErrorInfo.getEmptyDatabase(), code: 4});
             }
 
-            if (req.user.user.role == "admin") newProduct.owner = 'admin';
+            if (req.user.user.role == "admin") newProduct.owner = 'Admin';
             if (req.user.user.role == "premium") newProduct.owner = req.user.user.email;
 
             const result = await pm.post(newProduct);
             res.send({status: "Ok", payload: result});
         } catch(error) {
+            next(error);
+        }
+    }
+
+    postFullProduct = async(req, res, next) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+
+        try {
+            let files = req.files;
+
+            let {title, description, code, price, stock, thumbnails} = req.body;
+
+            if (files.image[0]) thumbnails = `/userImages/images/${req.createdfilename}`;
+
+            let newProduct = {
+                title,
+                description,
+                code,
+                price,
+                stock,
+                thumbnails
+            }
+
+            if (!title || !description || !code || !price || !stock) {
+                req.logger.error(`Hay datos faltantes en ${req.url}`);
+                CustomError.createError({statusCode: 400, name: "Some data is missing", cause: generateErrorInfo.getEmptyDatabase(), code: 4});
+            }
+
+            if (req.user.user.role == "admin") newProduct.owner = 'Admin';
+            if (req.user.user.role == "premium") newProduct.owner = req.user.user.email;
+
+            const result = await pm.post(newProduct);
+            res.send({status: "Ok", payload: result});
+        } catch (error) {
             next(error);
         }
     }
@@ -146,6 +181,26 @@ export default class ProductController {
 
             if (req.user.user.role == "premium") {
                 if (req.user.user.email != exists.owner) CustomError.createError({statusCode: 401, name: "Product isnt yours", cause: generateErrorInfo.unauthorized(), code: 2});
+            }
+
+            let email;
+
+            if (exists.owner != 'Admin') email = exists.owner;
+
+
+            try {
+                await transport.sendMail({
+                    from: 'flordaros5@gmail.com',
+                    to: email,
+                    subject: `Producto ${exists.title} eliminado`,
+                    html: `
+                    <div style="background-color: black; color: green; display: flex; flex-direction: column; justify-content: center;  align-items: center;">
+                    <h1>Se ha borrado tu producto ${exists.title}</h1>
+                    </div>
+                    `
+                });
+            } catch {
+                return res.send({status: "error", message: "El mail del dueño es inválido y no se ha podido avisar"});
             }
 
             let result = await pm.delete(id);

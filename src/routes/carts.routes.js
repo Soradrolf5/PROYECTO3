@@ -21,6 +21,6 @@ router.delete('/:cid/product/:pid', isUser, cc.deleteProduct);
 
 router.delete('/:cid', cc.delete);
 
-router.post('/:cid/purchase', passport.authenticate('jwt', {session: false}), cc.postPurchase);
+// router.post('/:cid/purchase', passport.authenticate('jwt', {session: false}), cc.postPurchase); // Ruta comentada porque en realidad es responsabilidad de la api de Tickets
 
 export default router;

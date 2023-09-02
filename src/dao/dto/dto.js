@@ -9,4 +9,15 @@ export default class Dto {
         }
         return dtoUser;
     }
+
+    getDetailed(user) {
+        let dtoUser = {
+            full_name: `${user.first_name} ${user.last_name}`,
+            email: user.email,
+            role: user.role,
+            cart: user.cart[0],
+            id: user._id
+        }
+        return dtoUser;
+    }
 }

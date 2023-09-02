@@ -1,8 +1,8 @@
 <link rel="stylesheet" href="css/styles.css">
 <header>
-    <a href="/">Home</a>
+    <a href="/" class="headerDiv">Home</a>
     <h1>Documentos de usuario</h1>
-    <div>
+    <div class="headerDiv toRight">
         {{#if isLogin}}
             <a href="/carts/{{user.cart}}"><i class="fa-solid fa-cart-shopping" style="color: white"></i></a>
             <a href="/user">Bienvenido {{user.first_name}} {{user.last_name}}</a>
@@ -25,7 +25,7 @@
                 
                 <h3>Imagenes de utilidad</h3><br>
                 <p class="formText">Imagen de perfil</p><input type="file" name="thumbnail" id="" style="color: white;">
-                <p class="formText">Imagen de foto</p><input type="file" name="image" id="" style="color: white;">
+                <p class="formText">Imagen de producto</p><input type="file" name="image" id="" style="color: white;">
             </div>
             
             <button type="submit" class="submit">Subir archivos</button>

@@ -10,7 +10,6 @@ export default class Ticket {
 
     getOne = async(id) => {
         let ticket = await ticketsModel.findOne({_id: id}).lean();
-        console.log(ticket);
         if (!ticket) {
             return null;
         }

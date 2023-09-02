@@ -32,7 +32,6 @@ export default class CartController {
                 req.logger.error(`El Cart ID proporcionado es invalido: ${cid} en la ruta ${req.url}`);
             }
             let carts = await cm.getOne(cid);
-            req.logger.debug(carts)
             if (!carts) {
                 CustomError.createError({name: "Error leyendo la base de datos", cause: generateErrorInfo.getEmptyDatabase(), message: "No info avaliable", code: 3})
                 req.logger.warning(`La base de datos de carts está vacía. Ruta: ${req.url}`);
@@ -50,52 +49,10 @@ export default class CartController {
         res.send({status: "Ok", payload: result});
     }
 
-    postPurchase = async(req, res) => {
+    put = async(req, res, next) => { // Añade un producto
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
 
-        try {
-            let cid = req.params.cid;
-            
-            let cart = await cm.getOne(cid);
-            let cartProducts = cart.products;
-            let ticketTotal = 0;
-            let valid = false;
-
-            cartProducts.forEach(product => {
-                if (product.quantity <= product._id.stock) {
-                    let currentProduct = product._id;
-                    currentProduct.stock -= product.quantity;
-                    ticketTotal+=currentProduct.price*product.quantity;
-                    pm.put(product._id._id, currentProduct); // Actualiza el producto
-                    cartProducts.splice(cartProducts.findIndex(element => element._id._id == currentProduct._id), 1);
-                    valid = true;
-                }
-            });
-
-            if (!valid) {
-                CustomError.createError({statusCode: 400, name: "No products added", cause: generateErrorInfo.getEmptyDatabase(), message: "There was no product that could be purchased", code: 4});
-                req.logger.error("No hay productos para comprar");
-            }
-
-            cart.products = cartProducts;
-            cm.put(cart._id, cart);
-
-            let date = new Date(Date.now()).toLocaleString();
-            let code = faker.database.mongodbObjectId();
-            let user = req.user.user.email;
-
-            tm.post({code, purchaser: user, purchase_datetime: date, amount: ticketTotal});
-
-            res.send({status: "Ok", payload: {code, purchaser: user, purchase_datetime: date, amount: ticketTotal}});
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    put = async(req, res, next) => {
-        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
-
-        req.logger.debug("Llegue al put")
+        req.logger.debug("Llegue al put");
 
         try {
             let cid = req.params.cid;
@@ -115,7 +72,7 @@ export default class CartController {
             let isInvalid = false;
 
             for (const product of products) {
-                const search = (element) => element == product._id;
+                const search = (element) => element._id == product._id;
             
                 let valid = ids.findIndex(search);
             
@@ -134,9 +91,11 @@ export default class CartController {
             if (isInvalid) return res.send({status: "error", message: "You cant add your products to your own cart"});
         
             cart.products = cartProducts;
-            // console.log(cart)
+            
             let result = await cm.put(cid, cart);
-            res.send(result);
+            
+            if (result.acknowledged) return res.send({status: 'Ok', message: "Se ha guardado el producto"});
+            res.send({status: "error", message: "Algo ha salido mal"});
         } catch (error) {
             next(error);
         }
