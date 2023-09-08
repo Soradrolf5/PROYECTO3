@@ -7,7 +7,6 @@ import handlebars from 'express-handlebars';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUiExpress from 'swagger-ui-express';
 import { Server } from 'socket.io';
-import cors from 'cors';
 
 import initPassport from './config/passport.config.js';
 import cartRouter from './routes/carts.routes.js';
@@ -29,12 +28,6 @@ const mm = new Message();
 mongoose.set("strictQuery", false); // Quita el warning
 
 const app = express();
-app.use(cors({
-    origin: 'https://proyecto3-production-e410.up.railway.app', // Establece la URL permitida
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, // Habilita las cookies y encabezados de autorización
-  }));
-  
 
 app.use(cookieParser());
 initPassport();
@@ -57,7 +50,7 @@ const swaggerOptions = {
             description: "APIs desarrolladas que conforman parte del proyecto"
         }
     },
-    apis: [`./docs/**.yaml`] // Sin /src si es con nodemon app.js
+    apis: [`./src/docs/**.yaml`] // Sin /src si es con nodemon app.js
 };
 
 const specs = swaggerJsdoc(swaggerOptions);

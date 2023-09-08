@@ -39,8 +39,8 @@ export default class ProductController {
             }
             query = query.replace(" ",""); // Quita un espacio por las dudas
         
-            (products.hasNextPage == true ) ? nextLink = `http://localhost:3000/api/products/?limit=${limit}&page=${page+1}&query=${query}` : nextLink = null;
-            (products.hasPrevPage == true ) ? prevLink = `http://localhost:3000/api/products/?limit=${limit}&page=${page-1}&query=${query}` : prevLink = null;
+            (products.hasNextPage == true ) ? nextLink = `https://proyecto3-production-e410.up.railway.app/api/products/?limit=${limit}&page=${page+1}&query=${query}` : nextLink = null;
+            (products.hasPrevPage == true ) ? prevLink = `https://proyecto3-production-e410.up.railway.app/api/products/?limit=${limit}&page=${page-1}&query=${query}` : prevLink = null;
             
             if (!products) {
                 req.logger.warning('La base de datos de products está vacía');

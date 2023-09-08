@@ -43,8 +43,8 @@ export default class ViewController {
         
             page = parseInt(page);
             let nextLink, prevLink;
-            (products.hasNextPage == true ) ? nextLink = `http://localhost:8080/?limit=${limit}&page=${page+1}&query=${query}` : nextLink = null;
-            (products.hasPrevPage == true ) ? prevLink = `http://localhost:8080/?limit=${limit}&page=${page-1}&query=${query}` : prevLink = null;
+            (products.hasNextPage == true ) ? nextLink = `http://proyecto3-production-e410.up.railway.app/?limit=${limit}&page=${page+1}&query=${query}` : nextLink = null;
+            (products.hasPrevPage == true ) ? prevLink = `http://proyecto3-production-e410.up.railway.app/?limit=${limit}&page=${page-1}&query=${query}` : prevLink = null;
         
             let hasNextPage = products.hasNextPage, hasPrevPage = products.hasPrevPage;
             products = products.docs;

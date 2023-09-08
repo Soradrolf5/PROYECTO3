@@ -10,10 +10,12 @@ const storage = multer.diskStorage({
     },
     filename: function(req, file, cb) {
         let user = req.user;
-        let filename = `${Date.now()}-${file.originalname}`
-        if (file.fieldname != 'image' && file.fieldname != 'thumbnail') filename = `${user.email}-${file.fieldname}`
+        let filename = `${Date.now()}-${file.originalname}`;
+        if (file.fieldname != 'image' && file.fieldname != 'thumbnail') filename = `${user.email}-${file.fieldname}`;
         
         let fileExtension = file.originalname.split('.');
+
+        req.createdfilename = `${filename}.${fileExtension[1]}`;
 
         cb(null, `${filename}.${fileExtension[1]}`);
     }
