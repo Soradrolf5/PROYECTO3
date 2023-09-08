@@ -40,7 +40,7 @@ export default class SessionController {
         try {
             try {
                 await transport.sendMail({
-                    from: 'benjabastan@gmail.com',
+                    from: 'flordaros5@gmail.com',
                     to: req.user.email,
                     subject: 'Se ha creado una cuenta en Ecommerce Coder',
                     html: `

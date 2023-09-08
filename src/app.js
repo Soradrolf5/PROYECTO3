@@ -7,6 +7,7 @@ import handlebars from 'express-handlebars';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUiExpress from 'swagger-ui-express';
 import { Server } from 'socket.io';
+import cors from 'cors';
 
 import initPassport from './config/passport.config.js';
 import cartRouter from './routes/carts.routes.js';
@@ -28,6 +29,12 @@ const mm = new Message();
 mongoose.set("strictQuery", false); // Quita el warning
 
 const app = express();
+app.use(cors({
+    origin: 'https://proyecto3-production-e410.up.railway.app', // Establece la URL permitida
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, // Habilita las cookies y encabezados de autorización
+  }));
+  
 
 app.use(cookieParser());
 initPassport();
@@ -75,7 +82,7 @@ app.use('/', viewsRouter);
 
 app.use(errorHandler);
 
-const httpServer = app.listen(config.port || 3000, () => logger.info(`Server listening on port ${config.port || 8080}`));
+const httpServer = app.listen(config.port || 3000, () => logger.info(`Server listening on port ${config.port || 3000}`));
 
 export const io = new Server(httpServer);
 
@@ -86,7 +93,7 @@ io.on('connection', socket => {
     socket.on("message", data => {
         if (data.user == '') return;
 
-        if (data.role == user) {
+        if (data.role == data.user) {
             mm.addMessage(data);
             messages.push(data);
             

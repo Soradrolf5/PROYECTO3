@@ -7,7 +7,7 @@ const um = new userManager();
 const cm = new CartManager();
 
 export const registerUser = async(req, res, next) => {
-    const {first_name, last_name, age, email, password} = req.body;
+    const {first_name, last_name, age, email, password, role} = req.body;
     try {
         let user = await um.getOne({email: email});
         req.logger.debug("user");
@@ -30,7 +30,8 @@ export const registerUser = async(req, res, next) => {
             email,
             age,
             password: createHash(password),
-            cart
+            cart,
+            role: role
         }
 
         req.newUser = result;
