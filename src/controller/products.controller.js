@@ -86,53 +86,21 @@ export default class ProductController {
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
     
         try {
-          // Validación de datos
-          await Promise.all(this.validateProduct.map(validation => validation(req, res)));
-          const errors = validationResult(req);
-          if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-          }
+            // Validación de datos
+            await Promise.all(this.validateProduct.map(validation => validation(req, res)));
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
+            }
     
-          const { title, description, code, price, stock, thumbnails } = req.body;
-          let newProduct = {
-            title,
-            description,
-            code,
-            price,
-            stock,
-            thumbnails
-          }
-    
-          if (req.user.user.role == "admin") newProduct.owner = 'Admin';
-          if (req.user.user.role == "premium") newProduct.owner = req.user.user.email;
-    
-          const result = await pm.post(newProduct);
-          res.send({ status: "Ok", payload: result });
-        } catch (error) {
-          next(error);
-        }
-      }
-
-    
-      postFullProduct = async (req, res, next) => {
-        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
-    
-        try {
-          // Validación de datos
-          validateProduct(req, res, async () => {
-            let files = req.files;
-    
-            let { title, description, code, price, stock, thumbnails } = req.body;
-    
-            if (files.image[0]) thumbnails = `/userImages/images/${req.createdfilename}`;
-    
+            const { title, description, code, price, stock, thumbnails } = req.body;
             let newProduct = {
-              title,
-              description,
-              code,
-              price,
-              stock,
-              thumbnails
+                title,
+                description,
+                code,
+                price,
+                stock,
+                thumbnails
             }
     
             if (req.user.user.role == "admin") newProduct.owner = 'Admin';
@@ -140,11 +108,48 @@ export default class ProductController {
     
             const result = await pm.post(newProduct);
             res.send({ status: "Ok", payload: result });
-          });
         } catch (error) {
-          next(error);
+            next(error); // Pasa el error al middleware de manejo de errores
         }
-      }
+    }
+    
+    postFullProduct = async (req, res, next) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
+    
+        try {
+            // Validación de datos
+            await Promise.all(this.validateProduct.map(validation => validation(req, res)));
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
+            }
+    
+            let files = req.files;
+    
+            let { title, description, code, price, stock, thumbnails } = req.body;
+    
+            if (files && files.image && files.image[0]) {
+                thumbnails = `/userImages/images/${req.createdfilename}`;
+            }
+    
+            let newProduct = {
+                title,
+                description,
+                code,
+                price,
+                stock,
+                thumbnails
+            }
+    
+            if (req.user.user.role == "admin") newProduct.owner = 'Admin';
+            if (req.user.user.role == "premium") newProduct.owner = req.user.user.email;
+    
+            const result = await pm.post(newProduct);
+            res.send({ status: "Ok", payload: result });
+        } catch (error) {
+            next(error); // Pasa el error al middleware de manejo de errores
+        }
+    }
 
     put = async(req, res, next) => {
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
