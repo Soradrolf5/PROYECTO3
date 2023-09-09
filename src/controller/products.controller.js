@@ -6,15 +6,6 @@ import { body, validationResult } from 'express-validator';
 
 export default class ProductController {
 
-
-    validateProduct = [
-        body('title').notEmpty(),
-        body('description').notEmpty(),
-        body('code').notEmpty(),
-        body('price').isFloat(),
-        body('stock').isInt(),
-    ];
-
     get = async(req, res, next) => {
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
 
@@ -81,19 +72,11 @@ export default class ProductController {
         }
         res.send({status: "Ok", payload: {docs, totalDocs: 100, limit: 100, totalPages: 1, page: 1, pagingCounter: 1, hasPrevPage: false, hasNextPage: false, prevPage: null, nextPage: null}});
     }
+    post = async(req, res, next) => {
+        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
 
-    post = async (req, res, next) => {
-        req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
-    
         try {
-            // Validación de datos
-            await Promise.all(this.validateProduct.map(validation => validation(req, res)));
-            const errors = validationResult(req);
-            if (!errors.isEmpty()) {
-                return res.status(400).json({ errors: errors.array() });
-            }
-    
-            const { title, description, code, price, stock, thumbnails } = req.body;
+            const {title, description, code, price, stock, thumbnails} = req.body;
             let newProduct = {
                 title,
                 description,
@@ -102,36 +85,32 @@ export default class ProductController {
                 stock,
                 thumbnails
             }
-    
+
+            if (!title || !description || !code || !price || !stock) {
+                req.logger.error(`Hay datos faltantes en ${req.url}`);
+                CustomError.createError({statusCode: 400, name: "Some data is missing", cause: generateErrorInfo.getEmptyDatabase(), code: 4});
+            }
+
             if (req.user.user.role == "admin") newProduct.owner = 'Admin';
             if (req.user.user.role == "premium") newProduct.owner = req.user.user.email;
-    
+
             const result = await pm.post(newProduct);
-            res.send({ status: "Ok", payload: result });
-        } catch (error) {
-            next(error); // Pasa el error al middleware de manejo de errores
+            res.send({status: "Ok", payload: result});
+        } catch(error) {
+            next(error);
         }
     }
-    
-    postFullProduct = async (req, res, next) => {
+
+    postFullProduct = async(req, res, next) => {
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
-    
+
         try {
-            // Validación de datos
-            await Promise.all(this.validateProduct.map(validation => validation(req, res)));
-            const errors = validationResult(req);
-            if (!errors.isEmpty()) {
-                return res.status(400).json({ errors: errors.array() });
-            }
-    
             let files = req.files;
-    
-            let { title, description, code, price, stock, thumbnails } = req.body;
-    
-            if (files && files.image && files.image[0]) {
-                thumbnails = `/userImages/images/${req.createdfilename}`;
-            }
-    
+
+            let {title, description, code, price, stock, thumbnails} = req.body;
+
+            if (files.image[0]) thumbnails = `/userImages/images/${req.createdfilename}`;
+
             let newProduct = {
                 title,
                 description,
@@ -140,16 +119,22 @@ export default class ProductController {
                 stock,
                 thumbnails
             }
-    
+
+            if (!title || !description || !code || !price || !stock) {
+                req.logger.error(`Hay datos faltantes en ${req.url}`);
+                CustomError.createError({statusCode: 400, name: "Some data is missing", cause: generateErrorInfo.getEmptyDatabase(), code: 4});
+            }
+
             if (req.user.user.role == "admin") newProduct.owner = 'Admin';
             if (req.user.user.role == "premium") newProduct.owner = req.user.user.email;
-    
+
             const result = await pm.post(newProduct);
-            res.send({ status: "Ok", payload: result });
+            res.send({status: "Ok", payload: result});
         } catch (error) {
-            next(error); // Pasa el error al middleware de manejo de errores
+            next(error);
         }
     }
+
 
     put = async(req, res, next) => {
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
