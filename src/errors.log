@@ -316,3 +316,22 @@ fatal: GET con /apidocs/swagger-ui-standalone-preset.js - 8/9/2023
 fatal: GET con /apidocs/swagger-ui-init.js - 8/9/2023
 fatal: POST con /api/carts - 8/9/2023
 fatal: POST con /api/carts - 8/9/2023
+fatal: GET con / - 9/9/2023
+fatal: GET con /css/styles.css - 9/9/2023
+fatal: GET con /favicon.ico - 9/9/2023
+fatal: GET con /login - 9/9/2023
+fatal: GET con /css/styles.css - 9/9/2023
+fatal: GET con /js/login.js - 9/9/2023
+fatal: GET con /favicon.ico - 9/9/2023
+fatal: POST con /api/session/login - 9/9/2023
+fatal: POST con /api/session/login - 9/9/2023
+fatal: GET con / - 9/9/2023
+fatal: GET con /css/styles.css - 9/9/2023
+fatal: GET con /favicon.ico - 9/9/2023
+fatal: GET con /newProduct - 9/9/2023
+fatal: GET con /css/styles.css - 9/9/2023
+fatal: GET con /js/newProduct.js - 9/9/2023
+fatal: GET con /favicon.ico - 9/9/2023
+fatal: POST con /api/products/fullProduct - 9/9/2023
+fatal: undefined
+fatal: GET con /css/styles.css - 9/9/2023
