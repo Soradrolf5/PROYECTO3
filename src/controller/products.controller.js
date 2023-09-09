@@ -13,14 +13,7 @@ export default class ProductController {
         body('code').notEmpty(),
         body('price').isFloat(),
         body('stock').isInt(),
-        (req, res, next) => {
-          const errors = validationResult(req);
-          if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-          }
-          next();
-        },
-      ];
+    ];
 
     get = async(req, res, next) => {
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
@@ -94,27 +87,32 @@ export default class ProductController {
     
         try {
           // Validación de datos
-          validateProduct(req, res, async () => {
-            const { title, description, code, price, stock, thumbnails } = req.body;
-            let newProduct = {
-              title,
-              description,
-              code,
-              price,
-              stock,
-              thumbnails
-            }
+          await Promise.all(this.validateProduct.map(validation => validation(req, res)));
+          const errors = validationResult(req);
+          if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+          }
     
-            if (req.user.user.role == "admin") newProduct.owner = 'Admin';
-            if (req.user.user.role == "premium") newProduct.owner = req.user.user.email;
+          const { title, description, code, price, stock, thumbnails } = req.body;
+          let newProduct = {
+            title,
+            description,
+            code,
+            price,
+            stock,
+            thumbnails
+          }
     
-            const result = await pm.post(newProduct);
-            res.send({ status: "Ok", payload: result });
-          });
+          if (req.user.user.role == "admin") newProduct.owner = 'Admin';
+          if (req.user.user.role == "premium") newProduct.owner = req.user.user.email;
+    
+          const result = await pm.post(newProduct);
+          res.send({ status: "Ok", payload: result });
         } catch (error) {
           next(error);
         }
       }
+
     
       postFullProduct = async (req, res, next) => {
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
