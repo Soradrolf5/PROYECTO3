@@ -7,6 +7,7 @@ import handlebars from 'express-handlebars';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUiExpress from 'swagger-ui-express';
 import { Server } from 'socket.io';
+import cors from 'cors';
 
 import initPassport from './config/passport.config.js';
 import cartRouter from './routes/carts.routes.js';
@@ -28,6 +29,12 @@ const mm = new Message();
 mongoose.set("strictQuery", false); // Quita el warning
 
 const app = express();
+
+app.use(cors({
+    origin: 'https://proyecto3-production-e410.up.railway.app',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  }));
 
 app.use(cookieParser());
 initPassport();
