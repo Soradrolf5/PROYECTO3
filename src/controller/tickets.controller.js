@@ -53,28 +53,41 @@ export default class TicketController {
             let valid = false;
             let ticketItems = []; // Aquí almacenaremos el detalle de la compra
     
-            cartProducts.forEach(product => {
-                if (product.quantity <= product._id.stock) {
-                    let currentProduct = product._id;
-                    currentProduct.stock -= product.quantity;
-                    ticketTotal += currentProduct.price * product.quantity;
-                    pm.put(currentProduct._id, currentProduct); // Actualiza el producto
+            cartProducts.forEach(async (productInCart) => {
+                const product = await pm.getOne(productInCart._id);
+                
+                if (product && productInCart.quantity <= product.stock) {
+                    // Realizar la compra del producto y actualizar el stock
+                    const currentProduct = product;
+                    currentProduct.stock -= productInCart.quantity;
+                    ticketTotal += currentProduct.price * productInCart.quantity;
+                    pm.put(currentProduct._id, currentProduct);
     
-                    // Agrega este producto al detalle de la compra del ticket
+                    // Agregar este producto al detalle de la compra del ticket
                     ticketItems.push({
                         product_id: currentProduct._id,
-                        product_name: currentProduct.product_name, // Asegúrate de tener este campo en tu modelo de producto
-                        quantity: product.quantity,
+                        product_name: currentProduct.title, // Usa el campo 'title' para obtener el nombre del producto
+                        quantity: productInCart.quantity,
                         unit_price: currentProduct.price,
                     });
     
-                    cartProducts.splice(cartProducts.findIndex(element => element._id._id == currentProduct._id), 1);
+                    // Eliminar el producto del carrito
+                    const index = cart.products.findIndex((item) => item._id.equals(currentProduct._id));
+                    if (index !== -1) {
+                        cart.products.splice(index, 1);
+                    }
+                    
                     valid = true;
                 }
             });
     
             if (!valid) {
-                CustomError.createError({statusCode: 400, name: "There are no products to buy", cause: generateErrorInfo.getEmptyDatabase(), code: 4});
+                CustomError.createError({
+                    statusCode: 400,
+                    name: "There are no products to buy",
+                    cause: generateErrorInfo.getEmptyDatabase(),
+                    code: 4
+                });
                 req.logger.error(`No hay productos para comprar en el carrito ${cid}. Ruta ${req.url}`);
             }
     
@@ -94,34 +107,41 @@ export default class TicketController {
                 items: ticketItems, // Aquí asignamos el detalle de la compra al ticket
             });
     
+            // Genera la cadena HTML del correo electrónico con detalles de productos
+            const ticketHTML = `
+                <div style="background-color: black; color: green;">
+                    <h1>Tu ticket</h1>
+                    <p><strong>Código del ticket:</strong> ${code}</p>
+                    <p><strong>Fecha de compra:</strong> ${date}</p>
+                    <p><strong>Comprador:</strong> ${user}</p>
+                    <p><strong>Total:</strong> ${ticketTotal}</p>
+                    <h2>Detalle de la compra:</h2>
+                    <ul>
+                        ${ticketItems.map(item => `
+                            <li>
+                                <p><strong>Producto:</strong> ${item.product_name}</p>
+                                <p><strong>Cantidad:</strong> ${item.quantity}</p>
+                                <p><strong>Precio unitario:</strong> ${item.unit_price}</p>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+    
             try {
                 transport.sendMail({
                     from: 'flordaros5@gmail.com',
                     to: user,
                     subject: 'Gracias por comprar',
-                    html: `
-                    <div style="background-color: black; color: green;">
-                        <h1>Tu ticket</h1>
-                        <p><strong>Código del ticket:</strong> ${code}</p>
-                        <p><strong>Fecha de compra:</strong> ${date}</p>
-                        <p><strong>Comprador:</strong> ${user}</p>
-                        <p><strong>Total:</strong> ${ticketTotal}</p>
-                        <h2>Detalle de la compra:</h2>
-                        <ul>
-                            ${ticketItems.map(item => `
-                                <li>
-                                    <p><strong>Producto:</strong> ${item.product_name}</p>
-                                    <p><strong>Cantidad:</strong> ${item.quantity}</p>
-                                    <p><strong>Precio unitario:</strong> ${item.unit_price}</p>
-                                </li>
-                            `).join('')}
-                        </ul>
-                    </div>
-                `
+                    html: ticketHTML,
                 });
             } catch (error) {}
     
-            res.send({status: "Ok", message: "Hope you like what you bought", payload: `The code of the ticket is ${code} and the total is ${ticketTotal}`});
+            res.send({
+                status: "Ok",
+                message: "Hope you like what you bought",
+                payload: ticketHTML,
+            });
         } catch(error) {
             next(error);
         }
