@@ -41,42 +41,62 @@ export default class TicketController {
         }
     }
 
-    post = async(req, res, next) => { // Funciona
+    post = async(req, res, next) => {
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
-
+    
         try {
             let cid = req.params.cid;
-
+    
             let cart = await cm.getOne(cid);
             let cartProducts = cart.products;
             let ticketTotal = 0;
             let valid = false;
-
+            let items = []; // Aquí almacenaremos el detalle de la compra
+    
             cartProducts.forEach(product => {
                 if (product.quantity <= product._id.stock) {
                     let currentProduct = product._id;
                     currentProduct.stock -= product.quantity;
-                    ticketTotal+=currentProduct.price*product.quantity;
+                    ticketTotal += currentProduct.price * product.quantity;
+    
+                    // Agregar el producto al detalle de la compra
+                    items.push({
+                        product_id: currentProduct._id,
+                        product_name: currentProduct.name, // Asegúrate de que el modelo de productos tenga un campo 'name'
+                        quantity: product.quantity,
+                        unit_price: currentProduct.price,
+                    });
+    
                     pm.put(product._id._id, currentProduct); // Actualiza el producto
                     cartProducts.splice(cartProducts.findIndex(element => element._id._id == currentProduct._id), 1);
                     valid = true;
                 }
             });
-
+    
             if (!valid) {
                 CustomError.createError({statusCode: 400, name: "There are no products to buy", cause: generateErrorInfo.getEmptyDatabase(), code: 4});
                 req.logger.error(`No hay productos para comprar en el cart ${cid}. Ruta ${req.url}`);
             }
-
+    
             cart.products = cartProducts;
             cm.put(cart._id, cart);
-
+    
             let date = new Date(Date.now()).toLocaleString();
             let code = faker.database.mongodbObjectId();
             let user = req.user.user.email;
-
-            tm.post({code, purchaser: user, purchase_datetime: date, amount: ticketTotal});
-
+    
+            // Crear el objeto del ticket con el detalle de la compra
+            let ticketData = {
+                code,
+                purchaser: user,
+                purchase_datetime: date,
+                amount: ticketTotal,
+                items: items, // Agregar el detalle de la compra aquí
+            };
+    
+            // Crear el ticket
+            tm.post(ticketData);
+    
             try {
                 transport.sendMail({
                     from: 'flordaros5@gmail.com',
@@ -89,7 +109,7 @@ export default class TicketController {
                     `
                 });
             } catch (error) {}
-
+    
             res.send({status: "Ok", message: "Hope you like what you bought", payload: `The code of the ticket is ${code} and the total is ${ticketTotal}`});
         } catch(error) {
             next(error);
