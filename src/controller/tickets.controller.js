@@ -140,7 +140,20 @@ export default class TicketController {
             res.send({
                 status: "Ok",
                 message: "Hope you like what you bought",
-                payload: ticketHTML,
+                payload: `
+                    ${date}: Thank you ${user}, the code of the ticket is ${code} and the total is ${ticketTotal}.
+                    Detalle de la compra:
+                    <ul>
+                        ${ticketItems.map(item => `
+                            <li>
+                                <p><strong>Producto:</strong> ${item.product_name}</p>
+                                <p><strong>Cantidad:</strong> ${item.quantity}</p>
+                                <p><strong>Precio unitario:</strong> ${item.unit_price}</p>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+                `,
             });
         } catch(error) {
             next(error);
