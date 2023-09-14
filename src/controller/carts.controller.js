@@ -49,18 +49,18 @@ export default class CartController {
         res.send({status: "Ok", payload: result});
     }
 
-    put = async(req, res, next) => { // Añade un producto
+    put = async (req, res, next) => { // Añade un producto
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
-
+    
         req.logger.debug("Llegue al put");
-
+    
         try {
             let cid = req.params.cid;
-            if (req.user.user.cart[0] != cid) return res.status(401).send({status: "error", message: "El carrito no pertenece al usuario"})
+            if (req.user.user.cart[0] != cid) return res.status(401).send({ status: "error", message: "El carrito no pertenece al usuario" });
             let products = req.body;
-        
+    
             let cart = await cm.getOne(cid);
-
+    
             let cartProducts = cart.products;
             let ids = [];
             if (cartProducts.length > 0) {
@@ -68,34 +68,49 @@ export default class CartController {
                     ids.push(product._id);
                 })
             }
-            
+    
             let isInvalid = false;
-
+    
             for (const product of products) {
                 const search = (element) => element._id == product._id;
-            
+    
                 let valid = ids.findIndex(search);
-            
+    
                 if (valid != -1) {
+                    // Producto ya en el carrito, actualiza la cantidad
                     cartProducts[valid].quantity = product.quantity;
                 } else {
-                    let fullProduct = await pm.getOne({_id: product._id});
+                    // Producto no en el carrito, verifica stock y luego agrégalo
+                    let fullProduct = await pm.getOne({ _id: product._id });
+    
                     if (fullProduct.owner == req.user.user.email) {
                         isInvalid = true;
                         break;
                     }
+    
+                    // Verificar si la cantidad solicitada es mayor que el stock disponible
+                    if (product.quantity > fullProduct.stock) {
+                        isInvalid = true;
+                        break;
+                    }
+    
+                    // Resta la cantidad del stock del producto
+                    fullProduct.stock -= product.quantity;
+    
                     cartProducts.push(product);
                 }
             }
-
-            if (isInvalid) return res.send({status: "error", message: "You cant add your products to your own cart"});
-        
+    
+            if (isInvalid) {
+                return res.send({ status: "error", message: "No hay suficiente stock disponible" });
+            }
+    
             cart.products = cartProducts;
-            
+    
             let result = await cm.put(cid, cart);
-            
-            if (result.acknowledged) return res.send({status: 'Ok', message: "Se ha guardado el producto"});
-            res.send({status: "error", message: "Algo ha salido mal"});
+    
+            if (result.acknowledged) return res.send({ status: 'Ok', message: "Se ha guardado el producto" });
+            res.send({ status: "error", message: "Algo ha salido mal" });
         } catch (error) {
             next(error);
         }
