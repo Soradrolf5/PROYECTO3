@@ -41,7 +41,7 @@ export default class TicketController {
         }
     }
 
-    post = async(req, res, next) => {
+    post = async (req, res, next) => {
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
     
         try {
@@ -51,23 +51,23 @@ export default class TicketController {
             let cartProducts = cart.products;
             let ticketTotal = 0;
             let valid = false;
-            let items = []; // Aquí almacenaremos el detalle de la compra
+            let ticketItems = []; // Aquí almacenaremos el detalle de la compra
     
             cartProducts.forEach(product => {
                 if (product.quantity <= product._id.stock) {
                     let currentProduct = product._id;
                     currentProduct.stock -= product.quantity;
                     ticketTotal += currentProduct.price * product.quantity;
+                    pm.put(currentProduct._id, currentProduct); // Actualiza el producto
     
-                    // Agregar el producto al detalle de la compra
-                    items.push({
+                    // Agrega este producto al detalle de la compra del ticket
+                    ticketItems.push({
                         product_id: currentProduct._id,
-                        product_name: currentProduct.name, // Asegúrate de que el modelo de productos tenga un campo 'name'
+                        product_name: currentProduct.product_name, // Asegúrate de tener este campo en tu modelo de producto
                         quantity: product.quantity,
                         unit_price: currentProduct.price,
                     });
     
-                    pm.put(product._id._id, currentProduct); // Actualiza el producto
                     cartProducts.splice(cartProducts.findIndex(element => element._id._id == currentProduct._id), 1);
                     valid = true;
                 }
@@ -75,7 +75,7 @@ export default class TicketController {
     
             if (!valid) {
                 CustomError.createError({statusCode: 400, name: "There are no products to buy", cause: generateErrorInfo.getEmptyDatabase(), code: 4});
-                req.logger.error(`No hay productos para comprar en el cart ${cid}. Ruta ${req.url}`);
+                req.logger.error(`No hay productos para comprar en el carrito ${cid}. Ruta ${req.url}`);
             }
     
             cart.products = cartProducts;
@@ -85,17 +85,14 @@ export default class TicketController {
             let code = faker.database.mongodbObjectId();
             let user = req.user.user.email;
     
-            // Crear el objeto del ticket con el detalle de la compra
-            let ticketData = {
+            // Crea el ticket con el detalle de la compra
+            tm.post({
                 code,
                 purchaser: user,
                 purchase_datetime: date,
                 amount: ticketTotal,
-                items: items, // Agregar el detalle de la compra aquí
-            };
-    
-            // Crear el ticket
-            tm.post(ticketData);
+                items: ticketItems, // Aquí asignamos el detalle de la compra al ticket
+            });
     
             try {
                 transport.sendMail({
@@ -103,9 +100,9 @@ export default class TicketController {
                     to: user,
                     subject: 'Gracias por comprar',
                     html: `
-                    <div style="background-color: black; color: green; display: flex; flex-direction: column; justify-content: center;  align-items: center;">
-                    <h1>Tu ticket es ${code} y el total es ${ticketTotal}</h1>
-                    </div>
+                        <div style="background-color: black; color: green; display: flex; flex-direction: column; justify-content: center;  align-items: center;">
+                        <h1>Tu ticket es ${code} y el total es ${ticketTotal}</h1>
+                        </div>
                     `
                 });
             } catch (error) {}
