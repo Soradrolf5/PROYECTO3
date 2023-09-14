@@ -47,27 +47,34 @@ export default class TicketController {
 
         try {
             let cid = req.params.cid;
-    
             let cart = await cm.getOne(cid);
+
+            if (!cart || !cart.products || cart.products.length === 0) {
+                return res.status(400).send({
+                    status: "Error",
+                    message: "No products in the cart",
+                });
+            }
+
             let cartProducts = cart.products;
             let ticketTotal = 0;
             let valid = false;
-            let ticketItems = []; // Aquí almacenaremos el detalle de compra
-    
-            cartProducts.forEach(async (productInCart) => {
+            let ticketItems = [];
+
+            for (const productInCart of cartProducts) {
                 const product = await pm.getOne(productInCart._id);
-    
+
                 if (product && productInCart.quantity <= product.stock) {
                     const currentProduct = product;
-    
+
                     if (!mongoose.Types.ObjectId.isValid(currentProduct._id)) {
                         currentProduct._id = mongoose.Types.ObjectId(currentProduct._id);
                     }
-    
+
                     currentProduct.stock -= productInCart.quantity;
                     ticketTotal += currentProduct.price * productInCart.quantity;
                     pm.put(currentProduct._id, currentProduct);
-    
+
                     if (
                         mongoose.Types.ObjectId.isValid(productInCart._id) &&
                         mongoose.Types.ObjectId.isValid(currentProduct._id) &&
@@ -80,10 +87,9 @@ export default class TicketController {
                             cart.products.splice(index, 1);
                         }
                     }
-    
+
                     valid = true;
-    
-                    // Agregar detalles del producto al ticketItems
+
                     ticketItems.push({
                         product_id: currentProduct._id,
                         product_name: currentProduct.title,
@@ -91,44 +97,32 @@ export default class TicketController {
                         unit_price: currentProduct.price,
                     });
                 }
-            });
-    
+            }
+
             if (!valid || ticketTotal <= 0) {
-                CustomError.createError({
-                    statusCode: 400,
-                    name: "Invalid Purchase Data",
-                    cause: "Invalid purchase data or no products to buy",
-                    code: 5,
-                });
-                req.logger.error(
-                    `Datos de compra inválidos en el carrito ${cid}. Ruta ${req.url}`
-                );
                 return res.status(400).send({
                     status: "Error",
                     message: "Invalid purchase data or no products to buy",
                 });
             }
-    
-            // Crear el código del ticket
-            let date = new Date(Date.now()).toLocaleString();
-            let code = faker.database.mongodbObjectId();
-            let user = req.user.user.email;
 
-            // Crear el ticket con el detalle de compra
+            let date = new Date(Date.now()).toLocaleString();
+            let code = new mongoose.Types.ObjectId().toHexString();
+
+            let user = req.user.user.email;
             const newTicket = {
                 code,
                 purchaser: user,
                 purchase_datetime: date,
                 amount: ticketTotal,
-                items: ticketItems, // Agregar el detalle de compra aquí
+                items: ticketItems,
             };
 
-            // Guardar el ticket en la base de datos
             tm.post(newTicket);
-    
+
             try {
                 transport.sendMail({
-                    from: 'benjabastan@gmail.com',
+                    from: 'flordaros5@gmail.com',
                     to: user,
                     subject: 'Gracias por comprar',
                     html: `
@@ -144,14 +138,40 @@ export default class TicketController {
                     `,
                 });
             } catch (error) {}
-    
-            res.send({
-                status: "Ok",
-                message: "Hope you like what you bought",
-                payload: newTicket, // Cambiar el payload al objeto del ticket completo
-            });
+            const ticketItemsHtml = ticketItems.map((item) => `
+            <li>
+                Producto: ${item.product_name}
+                <br>
+                ID: ${item.product_id}
+                <br>
+                Cantidad: ${item.quantity}
+                <br>
+                Precio Unitario: ${item.unit_price}
+            </li>
+        `).join('');
+        
+        res.send({
+            status: "Ok",
+            message: "Hope you like what you bought",
+            payload: `
+                thanks ${user}, 
+                The code of the ticket is ${code} and the total is ${ticketTotal}. 
+                Detalle de compra:
+                
+                    ${ticketItems.map((item) => `
+                        
+                            ${item.product_name} (ID: ${item.product_id}),
+                            Cantidad: ${item.quantity},
+                            Precio Unitario: ${item.unit_price}
+                        
+                    `).join('')}
+                
+            `
+        });
+            
         } catch (error) {
             next(error);
         }
     }
+
 }

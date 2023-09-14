@@ -28,21 +28,27 @@ const initPassport = () => {
         done(null, user);
     });
 
-    passport.use('register', new localStrategy( // This works
-        {passReqToCallback: true, usernameField: 'email'}, async(req, something, username, done) => {
-            const {first_name, last_name, age, email, password} = req.body;
+    passport.use('register', new localStrategy(
+        { passReqToCallback: true, usernameField: 'email' }, async (req, something, username, done) => {
+            const { first_name, last_name, age, email, password } = req.body;
+    
+            // Verifica si la contraseña no está presente o es una cadena vacía.
+            if (!password || password.trim() === '') {
+                return done(null, false, { status: "Error", message: "Password is required" });
+            }
+    
             try {
-                let user = await um.getOne({email: email});
+                let user = await um.getOne({ email: email });
                 req.logger.debug(user);
                 if (user != null) {
                     req.logger.debug("El usuario ya existe");
-                    return done(null, false, {status: "Error", message: "El usuario ya existe"});
+                    return done(null, false, { status: "Error", message: "El usuario ya existe" });
                 }
-
-                let cartObj = await cm.post(); // Puede que rompa por no tener params
-
+    
+                let cartObj = await cm.post();
+    
                 let cart = cartObj._id
-
+    
                 const result = {
                     first_name,
                     last_name,
@@ -51,16 +57,15 @@ const initPassport = () => {
                     password: createHash(password),
                     cart
                 }
-
+    
                 let newUser = await um.post(result);
-
+    
                 return done(null, newUser);
-            } catch(error) {
+            } catch (error) {
                 done(error)
             }
         }
-    ))
-
+    ));
     passport.use('login', new localStrategy( // No redirige si está mal
         {passReqToCallback: true, usernameField: 'email'}, async(req, something, abc, done) => {
             const {email, password} = req.body;

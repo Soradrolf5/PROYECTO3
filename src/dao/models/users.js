@@ -10,7 +10,10 @@ const userSchema = new mongoose.Schema({
         unique: true
     },
     age: Number,
-    password: String,
+    password: {
+        type: String,
+        required: true  // Establecer la contraseña como requerida
+    },
     cart: {
         type: [
             {
