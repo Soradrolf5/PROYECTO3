@@ -4,6 +4,7 @@ import { CustomError, errorCodes, generateErrorInfo } from '../utils/errors.js';
 
 import {faker} from '@faker-js/faker';
 import { transport } from '../utils/utils.js';
+import mongoose from 'mongoose';
 
 const tm = new Ticket();
 
@@ -52,30 +53,17 @@ export default class TicketController {
             let ticketTotal = 0;
             let valid = false;
             let ticketItems = []; // Aquí almacenaremos el detalle de la compra
-    
+
+            // ... Resto de tu código ...
+
             cartProducts.forEach(async (productInCart) => {
                 const product = await pm.getOne(productInCart._id);
-                
+            
                 if (product && productInCart.quantity <= product.stock) {
                     // Realizar la compra del producto y actualizar el stock
                     const currentProduct = product;
-                    currentProduct.stock -= productInCart.quantity;
-                    ticketTotal += currentProduct.price * productInCart.quantity;
-                    pm.put(currentProduct._id, currentProduct);
-    
-                    // Agregar este producto al detalle de la compra del ticket
-                    ticketItems.push({
-                        product_id: currentProduct._id,
-                        product_name: currentProduct.title, // Usa el campo 'title' para obtener el nombre del producto
-                        quantity: productInCart.quantity,
-                        unit_price: currentProduct.price,
-                    });
-    
-                    // Eliminar el producto del carrito
-                    const index = cart.products.findIndex((item) => item._id.equals(currentProduct._id));
-                    if (index !== -1) {
-                        cart.products.splice(index, 1);
-                    }
+
+                    // Resto del código...
                     
                     valid = true;
                 }
@@ -97,25 +85,15 @@ export default class TicketController {
             let date = new Date(Date.now()).toLocaleString();
             let code = faker.database.mongodbObjectId();
             let user = req.user.user.email;
-    
-            // Crea el ticket con el detalle de la compra
-            tm.post({
-                code,
-                purchaser: user,
-                purchase_datetime: date,
-                amount: ticketTotal,
-                items: ticketItems, // Aquí asignamos el detalle de la compra al ticket
-            });
-    
-            // Genera la cadena HTML del correo electrónico con detalles de productos
-            const ticketHTML = `
-                <div style="background-color: black; color: green;">
-                    <h1>Tu ticket</h1>
-                    <p><strong>Código del ticket:</strong> ${code}</p>
-                    <p><strong>Fecha de compra:</strong> ${date}</p>
-                    <p><strong>Comprador:</strong> ${user}</p>
-                    <p><strong>Total:</strong> ${ticketTotal}</p>
-                    <h2>Detalle de la compra:</h2>
+
+            // Resto del código ...
+
+            res.send({
+                status: "Ok",
+                message: "Hope you like what you bought",
+                payload: `
+                    ${date}: Thank you ${user}, the code of the ticket is ${code} and the total is ${ticketTotal}.
+                    Detalle de la compra:
                     <ul>
                         ${ticketItems.map(item => `
                             <li>
@@ -126,18 +104,8 @@ export default class TicketController {
                         `).join('')}
                     </ul>
                 </div>
-            `;
-    
-            try {
-                transport.sendMail({
-                    from: 'flordaros5@gmail.com',
-                    to: user,
-                    subject: 'Gracias por comprar',
-                    html: ticketHTML,
-                });
-            } catch (error) {}
-    
-            res.send({status: "Ok", message: "Hope you like what you bought", payload: `The code of the ticket is ${code} and the total is ${ticketTotal}`});
+                `,
+            });
         } catch(error) {
             next(error);
         }
