@@ -100,10 +100,24 @@ export default class TicketController {
                     to: user,
                     subject: 'Gracias por comprar',
                     html: `
-                        <div style="background-color: black; color: green; display: flex; flex-direction: column; justify-content: center;  align-items: center;">
-                        <h1>Tu ticket es ${code} y el total es ${ticketTotal}</h1>
-                        </div>
-                    `
+                    <div style="background-color: black; color: green;">
+                        <h1>Tu ticket</h1>
+                        <p><strong>Código del ticket:</strong> ${code}</p>
+                        <p><strong>Fecha de compra:</strong> ${date}</p>
+                        <p><strong>Comprador:</strong> ${user}</p>
+                        <p><strong>Total:</strong> ${ticketTotal}</p>
+                        <h2>Detalle de la compra:</h2>
+                        <ul>
+                            ${ticketItems.map(item => `
+                                <li>
+                                    <p><strong>Producto:</strong> ${item.product_name}</p>
+                                    <p><strong>Cantidad:</strong> ${item.quantity}</p>
+                                    <p><strong>Precio unitario:</strong> ${item.unit_price}</p>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `
                 });
             } catch (error) {}
     
