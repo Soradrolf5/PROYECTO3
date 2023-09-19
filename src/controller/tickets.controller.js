@@ -97,11 +97,6 @@ export default class TicketController {
                         unit_price: currentProduct.price,
                     });
                     
-                    // Llama al método del controlador de carritos para eliminar el producto del carrito
-                    const productIdToRemove = productInCart.product_id;
-                    await cm.deleteProduct(cid, productIdToRemove);
-                
-            
                 }
             }
 
