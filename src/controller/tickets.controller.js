@@ -42,39 +42,40 @@ export default class TicketController {
         }
     }
 
+   
     post = async (req, res, next) => {
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
-
+    
         try {
             let cid = req.params.cid;
             let cart = await cm.getOne(cid);
-
+    
             if (!cart || !cart.products || cart.products.length === 0) {
                 return res.status(400).send({
                     status: "Error",
                     message: "No products in the cart",
                 });
             }
-
+    
             let cartProducts = cart.products;
             let ticketTotal = 0;
             let valid = false;
             let ticketItems = [];
-
+    
             for (const productInCart of cartProducts) {
                 const product = await pm.getOne(productInCart._id);
-
+    
                 if (product && productInCart.quantity <= product.stock) {
                     const currentProduct = product;
-
+    
                     if (!mongoose.Types.ObjectId.isValid(currentProduct._id)) {
                         currentProduct._id = mongoose.Types.ObjectId(currentProduct._id);
                     }
-
+    
                     currentProduct.stock -= productInCart.quantity;
                     ticketTotal += currentProduct.price * productInCart.quantity;
                     pm.put(currentProduct._id, currentProduct);
-
+    
                     if (
                         mongoose.Types.ObjectId.isValid(productInCart._id) &&
                         mongoose.Types.ObjectId.isValid(currentProduct._id) &&
@@ -87,29 +88,28 @@ export default class TicketController {
                             cart.products.splice(index, 1);
                         }
                     }
-
+    
                     valid = true;
-
+    
                     ticketItems.push({
                         product_id: currentProduct._id,
                         product_name: currentProduct.title,
                         quantity: productInCart.quantity,
                         unit_price: currentProduct.price,
                     });
-                    
                 }
             }
-
+    
             if (!valid || ticketTotal <= 0) {
                 return res.status(400).send({
                     status: "Error",
                     message: "Invalid purchase data or no products to buy",
                 });
             }
-
+    
             let date = new Date(Date.now()).toLocaleString();
             let code = new mongoose.Types.ObjectId().toHexString();
-
+    
             let user = req.user.user.email;
             const newTicket = {
                 code,
@@ -118,21 +118,22 @@ export default class TicketController {
                 amount: ticketTotal,
                 items: ticketItems,
             };
-
+    
             tm.post(newTicket);
-
-            // Elimina los productos del carrito después de la compra
+    
+           
+        // Elimina los productos del carrito después de la compra
         cart.products = [];
 
         // Actualiza el carrito en la base de datos para reflejar que está vacío
-        await cm.put(cid, cart.products);
+        await cm.put(cid, cart);
 
-            try {
-                transport.sendMail({
-                    from: 'flordaros5@gmail.com',
-                    to: user,
-                    subject: 'Gracias por comprar',
-                    html: `
+        try {
+            transport.sendMail({
+                from: 'flordaros5@gmail.com',
+                to: user,
+                subject: 'Gracias por comprar',
+                html: `
                     <div style="background-color: black; color: green; display: flex; flex-direction: column; justify-content: center;  align-items: center;">
                     <h1>Tu ticket es ${code} y el total es ${ticketTotal}</h1>
                     <p>Fecha de compra: ${date}</p>
@@ -142,21 +143,10 @@ export default class TicketController {
                         ${ticketItems.map((item) => `<li>${item.product_name} (ID: ${item.product_id}), Cantidad: ${item.quantity}, Precio Unitario: ${item.unit_price}</li>`).join('')}
                     </ul>
                     </div>
-                    `,
-                });
-            } catch (error) {}
-            const ticketItemsHtml = ticketItems.map((item) => `
-            <li>
-                Producto: ${item.product_name}
-                <br>
-                ID: ${item.product_id}
-                <br>
-                Cantidad: ${item.quantity}
-                <br>
-                Precio Unitario: ${item.unit_price}
-            </li>
-        `).join('');
-        
+                `,
+            });
+        } catch (error) {}
+
         res.send({
             status: "Ok",
             message: "Hope you like what you bought",
@@ -166,18 +156,16 @@ export default class TicketController {
                 Detalle de compra:
                 
                     ${ticketItems.map((item) => `
-                        
-                            ${item.product_name} (ID: ${item.product_id}),
-                            Cantidad: ${item.quantity},
-                            Precio Unitario: ${item.unit_price}
-                        
+                        ${item.product_name} (ID: ${item.product_id}),
+                        Cantidad: ${item.quantity},
+                        Precio Unitario: ${item.unit_price}
                     `).join('')}
                 
             `
         });
             
-        } catch (error) {
-            next(error);
-        }
+    } catch (error) {
+        next(error);
     }
+};
 }
