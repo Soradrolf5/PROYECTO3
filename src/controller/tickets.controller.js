@@ -125,7 +125,7 @@ export default class TicketController {
         cart.products = [];
 
         // Actualiza el carrito en la base de datos para reflejar que está vacío
-        await cm.put(cid, products);
+        await cm.put(cid, cart.products);
 
             try {
                 transport.sendMail({
