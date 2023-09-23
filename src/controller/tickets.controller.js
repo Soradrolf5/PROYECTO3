@@ -44,64 +44,52 @@ export default class TicketController {
 
     post = async (req, res, next) => {
         req.logger.http(`${req.method} at ${req.url} - ${new Date().toLocaleDateString()}`);
-    
+
         try {
             let cid = req.params.cid;
             let cart = await cm.getOne(cid);
-    
+
             if (!cart || !cart.products || cart.products.length === 0) {
                 return res.status(400).send({
                     status: "Error",
                     message: "No products in the cart",
                 });
             }
-    
+
             let cartProducts = cart.products;
             let ticketTotal = 0;
             let valid = false;
             let ticketItems = [];
-    
-            // Verifica si hay productos en el carrito que no tienen suficiente stock
-            let insufficientStock = false;
+
             for (const productInCart of cartProducts) {
                 const product = await pm.getOne(productInCart._id);
-                if (!product || productInCart.quantity > product.stock) {
-                    insufficientStock = true;
-                    break;
-                }
-            }
-    
-            // Si hay productos con stock insuficiente, devuelve un error
-            if (insufficientStock) {
-                return res.status(400).send({
-                    status: "Error",
-                    message: "Insufficient stock for some products in the cart",
-                });
-            }
-    
-            for (const productInCart of cartProducts) {
-                const product = await pm.getOne(productInCart._id);
-    
+
                 if (product && productInCart.quantity <= product.stock) {
                     const currentProduct = product;
-    
+
                     if (!mongoose.Types.ObjectId.isValid(currentProduct._id)) {
                         currentProduct._id = mongoose.Types.ObjectId(currentProduct._id);
                     }
-    
+
                     currentProduct.stock -= productInCart.quantity;
                     ticketTotal += currentProduct.price * productInCart.quantity;
                     pm.put(currentProduct._id, currentProduct);
-    
-                    const index = cart.products.findIndex((item) =>
-                        item._id.equals(currentProduct._id)
-                    );
-                    if (index !== -1) {
-                        cart.products.splice(index, 1);
+
+                    if (
+                        mongoose.Types.ObjectId.isValid(productInCart._id) &&
+                        mongoose.Types.ObjectId.isValid(currentProduct._id) &&
+                        productInCart._id.equals(currentProduct._id)
+                    ) {
+                        const index = cart.products.findIndex((item) =>
+                            item._id.equals(currentProduct._id)
+                        );
+                        if (index !== -1) {
+                            cart.products.splice(index, 1);
+                        }
                     }
-    
+
                     valid = true;
-    
+
                     ticketItems.push({
                         product_id: currentProduct._id,
                         product_name: currentProduct.title,
@@ -111,17 +99,17 @@ export default class TicketController {
                     
                 }
             }
-    
+
             if (!valid || ticketTotal <= 0) {
                 return res.status(400).send({
                     status: "Error",
                     message: "Invalid purchase data or no products to buy",
                 });
             }
-    
+
             let date = new Date(Date.now()).toLocaleString();
             let code = new mongoose.Types.ObjectId().toHexString();
-    
+
             let user = req.user.user.email;
             const newTicket = {
                 code,
@@ -130,9 +118,12 @@ export default class TicketController {
                 amount: ticketTotal,
                 items: ticketItems,
             };
-    
+
             tm.post(newTicket);
-    
+
+            cart.products = [];
+            await cm.put(cart._id, cart);
+
             try {
                 transport.sendMail({
                     from: 'flordaros5@gmail.com',
@@ -163,10 +154,6 @@ export default class TicketController {
             </li>
         `).join('');
         
-        // Elimina los elementos del carrito después de generar el ticket
-        cart.products = [];
-        await cm.put(cart._id, cart);
-    
         res.send({
             status: "Ok",
             message: "Hope you like what you bought",
@@ -190,5 +177,4 @@ export default class TicketController {
             next(error);
         }
     }
-
 }
