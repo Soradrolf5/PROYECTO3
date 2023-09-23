@@ -121,8 +121,11 @@ export default class TicketController {
 
             tm.post(newTicket);
 
-            cart.products = [];
-            await cm.put(cart._id, cart);
+            // Elimina los productos del carrito después de la compra
+        cart.products = [];
+
+        // Actualiza el carrito en la base de datos para reflejar que está vacío
+        await cm.put(cid, products);
 
             try {
                 transport.sendMail({
